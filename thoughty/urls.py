@@ -26,4 +26,5 @@ urlpatterns = [
 
     path('api/', include('pods.urls')),
     path('api/', include('battles.urls')),
-]
+    path('api/', include('brainstorm.urls')),
+] 
