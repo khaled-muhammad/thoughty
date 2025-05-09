@@ -25,4 +25,5 @@ urlpatterns = [
     path('auth/guest/', create_guest_user),
 
     path('api/', include('pods.urls')),
+    path('api/', include('battles.urls')),
 ]
