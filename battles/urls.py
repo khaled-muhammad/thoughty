@@ -10,4 +10,3 @@ urlpatterns = [
     path('', include(router.urls)),
     path('vote/', VoteCreateView.as_view(), name='vote'),
 ]
-
