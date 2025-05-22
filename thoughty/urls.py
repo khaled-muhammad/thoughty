@@ -20,11 +20,11 @@ from users.views import create_guest_user
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('auth/', include('djoser.urls')),
-    path('auth/', include('djoser.urls.jwt')),
-    path('auth/guest/', create_guest_user),
+    path('api/auth/', include('djoser.urls')),
+    path('api/auth/', include('djoser.urls.jwt')),
+    path('api/auth/guest/', create_guest_user),
 
     path('api/', include('pods.urls')),
     path('api/', include('battles.urls')),
-    path('api/', include('brainstorm.urls')),
+    path('api/brainstorm/', include('brainstorm.urls')),
 ] 
