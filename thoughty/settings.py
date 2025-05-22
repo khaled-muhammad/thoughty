@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -179,6 +182,9 @@ CORS_ALLOW_ALL_ORIGINS = True
 # For secure cookies (optional)
 SESSION_COOKIE_SAMESITE = 'Lax'  # or 'None' if cross-site and HTTPS
 CSRF_COOKIE_SAMESITE = 'Lax'
+
+# AI Integration Settings
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')  # Set via environment variable
 
 
 # Default primary key field type
