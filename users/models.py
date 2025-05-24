@@ -1,7 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-# Create your models here.
+import secrets
 
+# Create your models here.
 
 class User(AbstractUser):
     email      = models.EmailField(unique=True)
@@ -14,3 +15,7 @@ class User(AbstractUser):
 
     USERNAME_FIELD  = 'email'
     REQUIRED_FIELDS = ['username']
+
+    @staticmethod
+    def make_random_password(length=10, allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'):
+        return ''.join(secrets.choice(allowed_chars) for i in range(length))
