@@ -3,8 +3,9 @@ import json
 
 import requests
 
-BASE_URL   = 'http://localhost:8000/api/'
-TOKEN_FILE = "tokens.json"
+BASE_URL         = 'http://localhost:8000/api/'
+TOKEN_FILE       = "tokens.json"
+GUEST_TOKEN_FILE = "guest_tokens.json"
 
 def load_tokens():
     if os.path.exists(TOKEN_FILE):
