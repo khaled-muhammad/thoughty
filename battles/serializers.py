@@ -6,7 +6,7 @@ from .models import Battle, Vote
 class BattleSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Battle
-        fields = 'all'
+        fields = '__all__'
         read_only_fields = ['created_by', 'winner']
 
     def validate(self, data):
