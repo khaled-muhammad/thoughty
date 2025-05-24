@@ -26,9 +26,15 @@ class VoteSerializer(serializers.ModelSerializer):
         read_only_fields = ['voted_by']
     
     def validate(self, data):
-        battle = data['battle']
+        request_user = self.context['request'].user
+        battle       = data['battle']
+
         if battle.closes_at and battle.closes_at < timezone.now():
             raise serializers.ValidationError("Voting has ended for this battle.")
+        
+        if Vote.objects.filter(battle=battle, voted_by=request_user).exists():
+            raise serializers.ValidationError("You have already voted in this battle.")
+
         return data
     
     def create(self, validated_data):
