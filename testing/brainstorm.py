@@ -188,8 +188,6 @@ def test_create_pod_from_variation(variation_id):
 log(f"{Colors.BOLD}Starting Brainstorm App API Tests{Colors.ENDC}")
 log("-" * 50)
 
-# Step 1: Authenticate
-
 # Step 2: Get prompts
 prompts = test_get_prompts()
 if not prompts:
