@@ -1,0 +1,7 @@
+{
+  "detail": "Guest user created",
+  "id": 7,
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ4MTc2NjgxLCJpYXQiOjE3NDgwOTAyODEsImp0aSI6IjUyNTRiMTQyMzFmYzQ2MTdhY2RlZjU1YmQ2YjgzMzI3IiwidXNlcl9pZCI6N30.vCpdvvL_1jzcsZ7jK0PWlNSZVz-N5HKPaeOWVelpIEA",
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0ODY5NTA4MSwiaWF0IjoxNzQ4MDkwMjgxLCJqdGkiOiI3NDVlNDlmYTE4NDc0MTQ5YTQ5NzY0Njg5MmQ4MDk4NiIsInVzZXJfaWQiOjd9.9Q66OiYR98Uhlbu5SUY3hlaKwBmEXFlgAwu3Ibbtsgg",
+  "email": "guest6@thoughty.io"
+}
