@@ -23,7 +23,7 @@ class VoteSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Vote
         fields = ['battle', 'voted_by', 'choice']
-        read_only_field = ['voted_by']
+        read_only_fields = ['voted_by']
     
     def validate(self, data):
         battle = data['battle']
