@@ -26,7 +26,7 @@ Clone the repository:
 
 ```bash
 git clone https://github.com/khaled-muhammad/thoughty.git
-cd mindverse
+cd thoughty
 ```
 
 ### Backend
