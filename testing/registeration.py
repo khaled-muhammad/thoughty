@@ -1,8 +1,8 @@
 import requests
 from const import BASE_URL
 
-email    = 'example_john@example.com'
-username = 'example12'
+email    = 'sf@example.com'
+username = 'example123'
 password = 'starboy+stargirl'
 
 reg_req = requests.post(BASE_URL + "auth/users/", json={

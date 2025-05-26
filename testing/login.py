@@ -2,7 +2,7 @@ import json
 import requests
 from const import BASE_URL, TOKEN_FILE
 
-email    = 'example_john@example.com'
+email    = 'sf@example.com'
 password = 'starboy+stargirl'
 
 login_req = requests.post(BASE_URL + "auth/jwt/create/", json={

@@ -4,9 +4,9 @@ from const import BASE_URL, get_auth_headers
 
 
 req = requests.post(BASE_URL + 'pods/', json={
-    'title': 'KiwiTime',
-    'content': 'A mobile app, integrated with AI for time management',
-    'stage': 'idea', # idea, draft, review, final
+    'title': 'Test Pod',
+    'content': 'Just a test idea',
+    'stage': 'draft', # idea, draft, review, final
     'tags':[],
     'version': 1,
     'is_public': False,
