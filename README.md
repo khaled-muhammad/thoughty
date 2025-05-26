@@ -72,7 +72,7 @@ SECRET_KEY=your-secret
 DEBUG=True
 ALLOWED_HOSTS=*
 DATABASE_URL=postgres://...
-OPENAI_API_KEY=your-openai-key
+GROQ_API_KEY=your-groq-key
 ```
 
 ---
