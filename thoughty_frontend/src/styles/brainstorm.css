@@ -1,0 +1,226 @@
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(var(--rotation));
+  }
+}
+
+.wheel-container {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  margin: 0 auto;
+}
+
+#brainstorm .wheel {
+  width: 100%;
+  height: 100%;
+  transition: transform 5s cubic-bezier(0.17, 0.67, 0.21, 0.99);
+  transform: rotate(0deg);
+  transform-origin: center;
+}
+
+#brainstorm .wheel.spinning {
+  animation: spin var(--duration) cubic-bezier(0.17, 0.67, 0.21, 0.99) forwards;
+}
+
+#brainstorm .wheel-center {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: var(--light);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+#brainstorm .wheel-center:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+#brainstorm .history-item {
+  transition: all 0.3s ease;
+}
+
+#brainstorm .history-item:hover {
+  transform: translateX(5px);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+#brainstorm .theme-chip {
+  transition: all 0.2s ease;
+}
+
+#brainstorm .theme-chip:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#brainstorm .theme-chip.active {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Custom color classes scoped to brainstorm */
+#brainstorm .bg-primary {
+  background-color: var(--primary);
+}
+#brainstorm .bg-primary-light {
+  background-color: var(--primary-light);
+}
+#brainstorm .bg-secondary {
+  background-color: var(--secondary);
+}
+#brainstorm .bg-accent {
+  background-color: var(--accent);
+}
+#brainstorm .bg-dark {
+  background-color: var(--dark);
+}
+#brainstorm .bg-darker {
+  background-color: var(--darker);
+}
+#brainstorm .bg-light {
+  background-color: var(--light);
+}
+#brainstorm .bg-card {
+  background-color: var(--card-bg);
+}
+#brainstorm .bg-input {
+  background-color: var(--input-bg);
+}
+
+#brainstorm .border-input {
+  border-color: var(--input-br);
+}
+
+#brainstorm .text-primary {
+  color: var(--primary);
+}
+#brainstorm .text-primary-light {
+  color: var(--primary-light);
+}
+#brainstorm .text-secondary {
+  color: var(--secondary);
+}
+#brainstorm .text-accent {
+  color: var(--accent);
+}
+#brainstorm .text-dark {
+  color: var(--dark);
+}
+#brainstorm .text-darker {
+  color: var(--darker);
+}
+#brainstorm .text-light {
+  color: var(--light);
+}
+
+#brainstorm .hover\:bg-primary:hover {
+  background-color: var(--primary);
+}
+#brainstorm .hover\:bg-primary-light:hover {
+  background-color: var(--primary-light);
+}
+#brainstorm .hover\:bg-secondary:hover {
+  background-color: var(--secondary);
+}
+#brainstorm .hover\:bg-accent:hover {
+  background-color: var(--accent);
+}
+
+#brainstorm .ring-primary {
+  --tw-ring-color: var(--primary);
+}
+#brainstorm .ring-secondary {
+  --tw-ring-color: var(--secondary);
+}
+#brainstorm .ring-accent {
+  --tw-ring-color: var(--accent);
+}
+
+#brainstorm .bg-gradient-primary {
+  background-image: linear-gradient(
+    to right,
+    var(--primary),
+    var(--primary-light)
+  );
+}
+
+#brainstorm .bg-gradient-secondary {
+  background-image: linear-gradient(
+    to right,
+    var(--secondary),
+    var(--primary-light)
+  );
+}
+
+#brainstorm .bg-gradient-accent {
+  background-image: linear-gradient(to right, var(--accent), var(--primary));
+}
+
+/* Modal Animations */
+@keyframes modalBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalBackdropFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modalSlideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+}
+
+.modal-backdrop {
+  animation: modalBackdropFadeIn 0.3s ease-out forwards;
+}
+
+.modal-backdrop.closing {
+  animation: modalBackdropFadeOut 0.2s ease-in forwards;
+}
+
+.modal-content {
+  animation: modalSlideUp 0.3s ease-out forwards;
+}
+
+.modal-content.closing {
+  animation: modalSlideDown 0.2s ease-in forwards;
+}

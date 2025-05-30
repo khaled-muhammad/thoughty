@@ -1,0 +1,135 @@
+#battle .gradient-bg {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+}
+
+#battle .gradient-text {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+#battle .battle-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: var(--card-bg);
+  color: var(--light);
+}
+
+#battle .battle-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+#battle .pod-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid var(--input-br);
+}
+
+#battle .pod-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+#battle .vote-btn {
+  transition: all 0.3s ease;
+}
+
+#battle .vote-btn:hover {
+  transform: scale(1.05);
+}
+
+#battle .vote-bar {
+  transition: width 1s ease-in-out;
+}
+
+#selectPodScreen input {
+  border: 3px solid var(--input-br);
+}
+#battle input,
+#battle select {
+  background: transparent !important;
+}
+#battle .selected-pod {
+  background: var(--input-bg);
+}
+
+#battle .dark-select {
+  background-color: var(--input-br);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--input-br);
+  font-family: Arial, sans-serif;
+  width: 200px;
+  font-size: 16px;
+}
+
+#battle .dark-select option {
+  background-color: var(--dark);
+  color: white;
+  padding: 8px;
+}
+
+#battle .dark-select option:hover {
+  background-color: var(--dark);
+}
+#selectOpponentScreen input {
+  border: 1px solid var(--input-br);
+}
+#newBattleBtn {
+  background: var(--primary);
+}
+#newBattleBtn:hover {
+  background-color: var(--primary-light);
+  opacity: 0.9;
+}
+
+/* VS Separator Animations */
+#battle .animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+#battle .animation-delay-400 {
+  animation-delay: 400ms;
+}
+
+#battle .vs-separator {
+  position: relative;
+  overflow: visible;
+}
+
+#battle .vs-glow {
+  animation: vs-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes vs-glow {
+  0% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+#battle .sparkle-1 {
+  animation: sparkle 1.5s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+#battle .sparkle-2 {
+  animation: sparkle 1.5s ease-in-out infinite;
+  animation-delay: 0.75s;
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}

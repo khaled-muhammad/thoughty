@@ -1,0 +1,242 @@
+#gamify .badge-locked {
+  filter: grayscale(100%) blur(1px);
+  opacity: 0.7;
+}
+
+#gamify .badge-unlocked {
+  animation: pop 0.3s ease-out;
+}
+
+#gamify .glow {
+  box-shadow: 0 0 15px var(--primary-light);
+}
+
+#gamify .glow-secondary {
+  box-shadow: 0 0 15px var(--secondary-light);
+}
+
+#gamify .glow-accent {
+  box-shadow: 0 0 15px var(--accent-light);
+}
+
+#gamify .glow-teal {
+  box-shadow: 0 0 15px rgba(20, 184, 166, 0.6);
+}
+
+#gamify .glow-indigo {
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+}
+
+#gamify .glow-amber {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+}
+
+#gamify .progress-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+  transition: width 0.5s ease;
+}
+
+#gamify .rank-1 {
+  background: linear-gradient(
+    90deg,
+    rgba(251, 191, 36, 0.2) 0%,
+    rgba(245, 158, 11, 0.4) 100%
+  );
+}
+
+#gamify .rank-2 {
+  background: linear-gradient(
+    90deg,
+    rgba(156, 163, 175, 0.2) 0%,
+    rgba(107, 114, 128, 0.4) 100%
+  );
+}
+
+#gamify .rank-3 {
+  background: linear-gradient(
+    90deg,
+    rgba(180, 83, 9, 0.2) 0%,
+    rgba(146, 64, 14, 0.4) 100%
+  );
+}
+
+#gamify .token-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Enhanced Modal Animations */
+@keyframes modalSlideIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px) rotate(-2deg);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02) translateY(-5px) rotate(0.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes modalSlideOut {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px) rotate(-2deg);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+/* Animation utility classes */
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.animate-sparkle {
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+/* Modal backdrop blur enhancement */
+#gamify .modal-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Enhanced badge hover effects */
+#gamify .badge-unlocked:hover {
+  transform: translateY(-2px) scale(1.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#gamify .badge-locked:hover {
+  filter: grayscale(80%) blur(0.5px);
+  opacity: 0.8;
+  transform: translateY(-1px);
+  transition: all 0.3s ease;
+}
+
+/* Progress bar animation enhancement */
+#gamify .progress-bar-animated {
+  position: relative;
+  overflow: hidden;
+}
+
+#gamify .progress-bar-animated::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Responsive modal adjustments */
+@media (max-width: 640px) {
+  #gamify .modal-content {
+    margin: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  @keyframes modalSlideIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.95) translateY(30px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+}
+
+/* Enhanced shadow effects for modal */
+#gamify .modal-shadow {
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+} 

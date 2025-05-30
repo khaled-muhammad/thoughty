@@ -1,0 +1,309 @@
+#dashboard .gradient-bg {
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.9) 0%,
+    rgba(2, 6, 23, 0.95) 100%
+  );
+}
+
+#dashboard .card-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.1) 0%,
+    rgba(15, 23, 42, 0.8) 100%
+  );
+  backdrop-filter: blur(10px);
+}
+
+#dashboard .action-btn {
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#dashboard .action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+#dashboard .tab-active {
+  border-bottom: 3px solid #8b5cf6;
+  color: #8b5cf6;
+}
+
+#dashboard .stats-card {
+  backdrop-filter: blur(8px);
+}
+
+/* Mobile Responsiveness & Overflow Prevention */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent horizontal overflow */
+#dashboard {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+#dashboard * {
+  box-sizing: border-box;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 640px) {
+  #dashboard .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  #dashboard .card-gradient {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  /* Ensure badges don't overflow */
+  #dashboard .grid {
+    gap: 0.75rem;
+  }
+  
+  /* Adjust text sizes for mobile */
+  #dashboard h2 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  
+  #dashboard h3 {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+  
+  /* Mobile button adjustments */
+  #dashboard button {
+    min-height: 44px; /* iOS touch target */
+  }
+  
+  /* Mobile input adjustments */
+  #dashboard input,
+  #dashboard select {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  #dashboard .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Enhanced Badge Animations */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-20px) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes float-right {
+  0% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(20px) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes badge-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+.animate-float-up {
+  animation: float-up 2s ease-out infinite;
+}
+
+.animate-float-right {
+  animation: float-right 2s ease-out infinite;
+}
+
+.animation-delay-0 {
+  animation-delay: 0s;
+}
+
+.animation-delay-150 {
+  animation-delay: 0.15s;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-300 {
+  animation-delay: 0.3s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+/* Badge hover effects */
+#dashboard .badge-container {
+  position: relative;
+  overflow: visible;
+}
+
+#dashboard .badge-container::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+#dashboard .badge-container:hover::before {
+  opacity: 1;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Badge glow effect */
+#dashboard .badge-glow {
+  animation: badge-glow 2s ease-in-out infinite;
+}
+
+/* Tooltip arrow enhancement */
+#dashboard .tooltip-arrow::before {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Badge progress bar enhancement */
+#dashboard .badge-progress {
+  position: relative;
+  overflow: hidden;
+}
+
+#dashboard .badge-progress::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Enhanced sparkle effects */
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-sparkle {
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+/* Badge tier effects */
+#dashboard .badge-tier-gold {
+  background: linear-gradient(135deg, #ffd700, #ffed4e, #ffd700);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+#dashboard .badge-tier-silver {
+  background: linear-gradient(135deg, #c0c0c0, #e5e5e5, #c0c0c0);
+  box-shadow: 0 0 20px rgba(192, 192, 192, 0.4);
+}
+
+#dashboard .badge-tier-bronze {
+  background: linear-gradient(135deg, #cd7f32, #daa520, #cd7f32);
+  box-shadow: 0 0 20px rgba(205, 127, 50, 0.4);
+}
+
+/* Mobile-specific badge adjustments */
+@media (max-width: 640px) {
+  #dashboard .badge-container {
+    /* Reduce animation intensity on mobile for performance */
+  }
+  
+  #dashboard .badge-container .animate-pulse-slow {
+    animation-duration: 4s; /* Slower on mobile */
+  }
+  
+  /* Disable some effects on mobile for better performance */
+  #dashboard .badge-container .floating-particles {
+    display: none;
+  }
+}
+
+/* Ensure proper text wrapping */
+#dashboard .text-wrap {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Fix for very small screens */
+@media (max-width: 375px) {
+  #dashboard .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  #dashboard .grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  
+  #dashboard .space-x-2 > * + * {
+    margin-left: 0.25rem;
+  }
+}
