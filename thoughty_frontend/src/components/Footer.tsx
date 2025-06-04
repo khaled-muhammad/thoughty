@@ -1,15 +1,15 @@
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faTwitter, 
-  faLinkedin, 
-  faInstagram, 
-  faGithub, 
-  faDiscord 
+  faXTwitter,
+  faLinkedin,
+  faInstagram,
+  faGithub,
+  faDiscord
 } from '@fortawesome/free-brands-svg-icons';
 import { 
-  faHeart, 
-  faArrowRight, 
+  faHeart,
+  faArrowRight,
   faEnvelope,
   faBolt,
   faUsers,
@@ -22,7 +22,7 @@ import {
 import logoImage from '../assets/logo.png';
 
 export default function Footer() {
-  return (
+    return (
     <footer className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
@@ -83,9 +83,9 @@ export default function Footer() {
                 <FontAwesomeIcon icon={faUsers} className="mr-2 text-indigo-400" />
                 Follow Us
               </h4>
-              <div className="flex space-x-4">
+            <div className="flex space-x-4">
                 {[
-                  { icon: faTwitter, href: "#", label: "Twitter", color: "hover:text-blue-400" },
+                  { icon: faXTwitter, href: "#", label: "X", color: "hover:text-white" },
                   { icon: faLinkedin, href: "#", label: "LinkedIn", color: "hover:text-blue-600" },
                   { icon: faInstagram, href: "#", label: "Instagram", color: "hover:text-pink-400" },
                   { icon: faGithub, href: "#", label: "GitHub", color: "hover:text-gray-300" },
@@ -128,7 +128,7 @@ export default function Footer() {
                     </span>
                     {item.name}
                   </a>
-                </li>
+              </li>
               ))}
             </ul>
           </div>
@@ -169,7 +169,7 @@ export default function Footer() {
                       {item.name}
                     </a>
                   )}
-                </li>
+              </li>
               ))}
             </ul>
           </div>
@@ -221,5 +221,5 @@ export default function Footer() {
       {/* Bottom Glow Effect */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50"></div>
     </footer>
-  );
+    );
 }

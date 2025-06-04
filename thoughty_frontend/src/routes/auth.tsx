@@ -165,7 +165,7 @@ export default function Auth() {
         
         // Redirect to dashboard
         setTimeout(() => {
-          navigate('/dashboard');
+          window.location.replace('/dashboard');
         }, 1000);
       } else {
         // Handle API errors
@@ -203,7 +203,8 @@ export default function Auth() {
       const response = await authService.register({
         email: registerData.email,
         username: registerData.username,
-        password: registerData.password
+        password: registerData.password,
+        re_password: registerData.password,
       });
 
       if (response.success) {
@@ -297,15 +298,15 @@ export default function Auth() {
                 <div className="form-header">
                   <h1>Welcome Back</h1>
                   <p>Sign in to continue your journey</p>
-                </div>
-                
+        </div>
+
                 <form onSubmit={handleLoginSubmit} className="modern-form">
                   <div className="input-field">
-                    <label htmlFor="username">Username</label>
+              <label htmlFor="username">Username</label>
                     <div className="input-wrapper">
-                      <input
-                        type="text"
-                        id="username"
+              <input
+                type="text"
+                id="username"
                         placeholder="Enter your username"
                         className={`form-input ${errors.username ? 'error' : ''}`}
                         value={loginData.username}
@@ -317,11 +318,11 @@ export default function Auth() {
                   </div>
 
                   <div className="input-field">
-                    <label htmlFor="password">Password</label>
+              <label htmlFor="password">Password</label>
                     <div className="input-wrapper password-wrapper">
-                      <input
+              <input
                         type={showPassword ? "text" : "password"}
-                        id="password"
+                id="password"
                         placeholder="Enter your password"
                         className={`form-input ${errors.password ? 'error' : ''}`}
                         value={loginData.password}
@@ -342,7 +343,7 @@ export default function Auth() {
                   <div className="form-footer">
                     <a href="#" className="forgot-link">
                       Forgot password?
-                    </a>
+              </a>
                   </div>
                   
                   <button 
@@ -352,8 +353,8 @@ export default function Auth() {
                   >
                     <span>{isLoading ? 'Signing in...' : 'Sign In'}</span>
                     {!isLoading && <div className="button-shine"></div>}
-                  </button>
-                </form>
+              </button>
+            </form>
               </div>
 
               {/* Register Form */}
@@ -367,9 +368,9 @@ export default function Auth() {
                   <div className="input-field">
                     <label htmlFor="email2">Email Address</label>
                     <div className="input-wrapper">
-                      <input
-                        type="email"
-                        id="email2"
+              <input
+                type="email"
+                id="email2"
                         placeholder="Enter your email"
                         className={`form-input ${errors.email ? 'error' : ''}`}
                         value={registerData.email}
@@ -381,11 +382,11 @@ export default function Auth() {
                   </div>
 
                   <div className="input-field">
-                    <label htmlFor="username2">Username</label>
+              <label htmlFor="username2">Username</label>
                     <div className="input-wrapper">
-                      <input
-                        type="text"
-                        id="username2"
+              <input
+                type="text"
+                id="username2"
                         placeholder="Choose a username"
                         className={`form-input ${errors.username ? 'error' : ''}`}
                         value={registerData.username}
@@ -397,11 +398,11 @@ export default function Auth() {
                   </div>
 
                   <div className="input-field">
-                    <label htmlFor="password2">Password</label>
+              <label htmlFor="password2">Password</label>
                     <div className="input-wrapper password-wrapper">
-                      <input
+              <input
                         type={showPassword ? "text" : "password"}
-                        id="password2"
+                id="password2"
                         placeholder="Create a strong password"
                         className={`form-input ${errors.password ? 'error' : ''}`}
                         value={registerData.password}
@@ -420,11 +421,11 @@ export default function Auth() {
                   </div>
 
                   <div className="input-field">
-                    <label htmlFor="confirmPassword">Confirm Password</label>
+              <label htmlFor="confirmPassword">Confirm Password</label>
                     <div className="input-wrapper password-wrapper">
-                      <input
+              <input
                         type={showConfirmPassword ? "text" : "password"}
-                        id="confirmPassword"
+                id="confirmPassword"
                         placeholder="Confirm your password"
                         className={`form-input ${errors.confirmPassword ? 'error' : ''}`}
                         value={registerData.confirmPassword}
@@ -455,8 +456,8 @@ export default function Auth() {
                       <span className="checkbox-text">
                         I agree to the <a href="#" className="link">Terms of Service</a> and{' '}
                         <a href="#" className="link">Privacy Policy</a>
-                      </span>
-                    </label>
+                  </span>
+                </label>
                     {errors.agreeToTerms && <span className="field-error">{errors.agreeToTerms}</span>}
                   </div>
 
@@ -472,7 +473,7 @@ export default function Auth() {
                   <div className="social-section">
                     <div className="divider">
                       <span>Or continue with</span>
-                    </div>
+              </div>
                     <div className="social-buttons">
                       <button type="button" className="social-btn google" onClick={handleGoogleLogin} disabled={isLoading}>
                         <FontAwesomeIcon icon={faGoogle} />
@@ -481,12 +482,12 @@ export default function Auth() {
                       <button type="button" className="social-btn facebook" onClick={handleFacebookLogin} disabled={isLoading}>
                         <FontAwesomeIcon icon={faFacebookF} />
                         <span>Facebook</span>
-                      </button>
-                    </div>
-                  </div>
-                </form>
+              </button>
+                </div>
               </div>
-            </div>
+            </form>
+          </div>
+        </div>
           </div>
         </div>
       </div>

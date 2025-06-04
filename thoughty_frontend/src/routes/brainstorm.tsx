@@ -519,8 +519,8 @@ export default function Brainstorm() {
     }
   };
 
-  return (
-    <div id="brainstorm" className="page pt-[5rem]">
+    return (
+  <div id="brainstorm" className="page pt-[5rem]">
       <div className="container mx-auto px-4 py-8">
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-primary">
@@ -558,26 +558,26 @@ export default function Brainstorm() {
             <div className="mt-8 text-center">
               {showResult && (
                 <div className="bg-input rounded-lg p-4 mb-4 min-h-16">
-                  <h3 className="text-lg font-semibold mb-2">Your Prompt:</h3>
+                <h3 className="text-lg font-semibold mb-2">Your Prompt:</h3>
                   <p className="text-xl">{currentPrompt}</p>
-                </div>
+              </div>
               )}
 
               {showResult && (
-                <div className="flex justify-center space-x-4">
+              <div className="flex justify-center space-x-4">
                   <button
                     onClick={remixPrompt}
                     className="bg-accent hover:bg-primary-light px-6 py-3 rounded-lg flex items-center"
                   >
                     <FontAwesomeIcon icon={faRandom} className="mr-2" /> Remix
-                  </button>
+                </button>
                   <button
                     onClick={savePrompt}
                     className="bg-secondary hover:bg-primary-light px-6 py-3 rounded-lg flex items-center"
                   >
                     <FontAwesomeIcon icon={faSave} className="mr-2" /> Create Pod
-                  </button>
-                </div>
+                </button>
+              </div>
               )}
             </div>
           </div>
@@ -611,7 +611,7 @@ export default function Brainstorm() {
                       className="mr-1" 
                     />
                     {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </button>
+                </button>
                 ))}
               </div>
             </div>
@@ -638,7 +638,7 @@ export default function Brainstorm() {
                       className="mr-1" 
                     />
                     {theme.charAt(0).toUpperCase() + theme.slice(1)}
-                  </button>
+                </button>
                 ))}
               </div>
             </div>
@@ -690,10 +690,10 @@ export default function Brainstorm() {
           onClick={(e) => handleBackdropClick(e, closeHistoryModal)}
         >
           <div className={`bg-dark rounded-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto shadow-2xl modal-content ${historyModalClosing ? 'closing' : ''}`}>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">
                 <FontAwesomeIcon icon={faHistory} className="mr-2" /> Spin History
-              </h2>
+            </h2>
               <button 
                 onClick={closeHistoryModal}
                 className="text-gray-400 hover:text-light transition-colors duration-200 p-1 rounded-full hover:bg-gray-700"
@@ -754,39 +754,39 @@ export default function Brainstorm() {
           onClick={(e) => handleBackdropClick(e, closeSettingsModal)}
         >
           <div className={`bg-dark rounded-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto shadow-2xl modal-content ${settingsModalClosing ? 'closing' : ''}`}>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">
                 <FontAwesomeIcon icon={faCog} className="mr-2" /> Settings
-              </h2>
+            </h2>
               <button 
                 onClick={closeSettingsModal}
                 className="text-gray-400 hover:text-light transition-colors duration-200 p-1 rounded-full hover:bg-gray-700"
               >
                 <FontAwesomeIcon icon={faTimes} className="text-xl" />
-              </button>
-            </div>
+            </button>
+          </div>
 
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold mb-2">Cloud Sync</h3>
-                <p className="text-sm text-gray-400 mb-2">Save your prompts to the cloud (requires login)</p>
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-semibold mb-2">Cloud Sync</h3>
+              <p className="text-sm text-gray-400 mb-2">Save your prompts to the cloud (requires login)</p>
                 <button 
                   onClick={() => alert('Cloud sync would connect to API in production')}
                   className="w-full bg-primary hover:bg-primary-light p-2 rounded-lg transition-colors duration-200"
                 >
                   <FontAwesomeIcon icon={faCloud} className="mr-2" /> Enable Cloud Sync
-                </button>
-              </div>
+              </button>
+            </div>
 
-              <div>
-                <h3 className="font-semibold mb-2">Export/Import</h3>
-                <div className="grid grid-cols-2 gap-2">
+            <div>
+              <h3 className="font-semibold mb-2">Export/Import</h3>
+              <div className="grid grid-cols-2 gap-2">
                   <button 
                     onClick={exportData}
                     className="bg-secondary hover:bg-secondary/90 p-2 rounded-lg transition-colors duration-200"
                   >
                     <FontAwesomeIcon icon={faFileExport} className="mr-2" /> Export
-                  </button>
+                </button>
                   <label className="bg-accent hover:bg-accent/90 p-2 rounded-lg cursor-pointer text-center transition-colors duration-200">
                     <FontAwesomeIcon icon={faFileImport} className="mr-2" /> Import
                     <input 
@@ -796,13 +796,13 @@ export default function Brainstorm() {
                       className="hidden" 
                     />
                   </label>
-                </div>
               </div>
+            </div>
 
-              <div>
-                <h3 className="font-semibold mb-2">Wheel Customization</h3>
-                <div className="flex items-center mb-2">
-                  <label className="mr-2">Segments:</label>
+            <div>
+              <h3 className="font-semibold mb-2">Wheel Customization</h3>
+              <div className="flex items-center mb-2">
+                <label className="mr-2">Segments:</label>
                   <input 
                     type="range" 
                     min="4" 
@@ -812,9 +812,9 @@ export default function Brainstorm() {
                     className="w-full" 
                   />
                   <span className="ml-2 w-8 text-center">{segments}</span>
-                </div>
-                <div className="flex items-center">
-                  <label className="mr-2">Spin Duration:</label>
+              </div>
+              <div className="flex items-center">
+                <label className="mr-2">Spin Duration:</label>
                   <input 
                     type="range" 
                     min="3" 
@@ -838,76 +838,76 @@ export default function Brainstorm() {
           onClick={(e) => handleBackdropClick(e, closeCustomizeModal)}
         >
           <div className={`bg-dark rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl modal-content ${customizeModalClosing ? 'closing' : ''}`}>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">
                 <FontAwesomeIcon icon={faMagic} className="mr-2" /> Customize Prompt
-              </h2>
+            </h2>
               <button 
                 onClick={closeCustomizeModal}
                 className="text-gray-400 hover:text-light transition-colors duration-200 p-1 rounded-full hover:bg-gray-700"
               >
                 <FontAwesomeIcon icon={faTimes} className="text-xl" />
-              </button>
-            </div>
+            </button>
+          </div>
 
-            <div className="mb-4">
-              <label className="block font-semibold mb-2">Prompt Text</label>
+          <div className="mb-4">
+            <label className="block font-semibold mb-2">Prompt Text</label>
               <textarea 
                 value={customPromptText}
                 onChange={(e) => setCustomPromptText(e.target.value)}
                 className="w-full bg-input rounded-lg p-3 border border-input min-h-32 transition-all duration-200 focus:ring-2 focus:ring-primary focus:border-transparent"
               />
-            </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block font-semibold mb-2">Adjectives</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block font-semibold mb-2">Adjectives</label>
                 <select 
                   value={selectedAdjective}
                   onChange={(e) => setSelectedAdjective(e.target.value)}
                   className="w-full bg-input rounded-lg p-2 border border-input transition-all duration-200 focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
-                  <option value="">None</option>
-                  <option value="innovative">Innovative</option>
-                  <option value="thought-provoking">Thought-provoking</option>
-                  <option value="unconventional">Unconventional</option>
-                  <option value="detailed">Detailed</option>
-                  <option value="concise">Concise</option>
-                </select>
-              </div>
+                <option value="">None</option>
+                <option value="innovative">Innovative</option>
+                <option value="thought-provoking">Thought-provoking</option>
+                <option value="unconventional">Unconventional</option>
+                <option value="detailed">Detailed</option>
+                <option value="concise">Concise</option>
+              </select>
+            </div>
 
-              <div>
-                <label className="block font-semibold mb-2">Format</label>
+            <div>
+              <label className="block font-semibold mb-2">Format</label>
                 <select 
                   value={selectedFormat}
                   onChange={(e) => setSelectedFormat(e.target.value as FormatType)}
                   className="w-full bg-input rounded-lg p-2 border border-input transition-all duration-200 focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
-                  <option value="question">Question</option>
-                  <option value="statement">Statement</option>
-                  <option value="list">List</option>
-                  <option value="scenario">Scenario</option>
-                </select>
-              </div>
+                <option value="question">Question</option>
+                <option value="statement">Statement</option>
+                <option value="list">List</option>
+                <option value="scenario">Scenario</option>
+              </select>
             </div>
+          </div>
 
-            <div className="flex justify-end space-x-3">
+          <div className="flex justify-end space-x-3">
               <button 
                 onClick={closeCustomizeModal}
                 className="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg transition-colors duration-200"
               >
-                Cancel
-              </button>
+              Cancel
+            </button>
               <button 
                 onClick={saveCustomPrompt}
                 className="bg-primary hover:bg-primary-light px-4 py-2 rounded-lg transition-colors duration-200"
               >
                 <FontAwesomeIcon icon={faSave} className="mr-2" /> Save Prompt
-              </button>
-            </div>
+            </button>
           </div>
         </div>
+      </div>
       )}
-    </div>
-  );
+  </div>
+    );
 }

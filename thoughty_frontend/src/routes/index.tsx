@@ -351,23 +351,23 @@ export default function Home() {
           <div className="card p-8 fade-in">
             <div className="card-content">
               <div className="card-body">
-                <div className="flex items-center mb-4">
-                  <img className="w-12 h-12 rounded-full object-cover mr-4"
-                    src="https://randomuser.me/api/portraits/women/32.jpg" alt="Sarah Johnson" />
-                  <div>
-                    <h4 className="font-bold text-white">Sarah Johnson</h4>
-                    <p className="text-gray-500 text-sm">Founder, NovelNest</p>
-                  </div>
-                </div>
-                <p className="text-gray-400 mb-6">
-                  "Thoughty helped me evolve my book subscription idea from a
-                  vague concept to a fully-fledged business plan. The Mind Battles
-                  were particularly valuable for stress-testing assumptions."
-                </p>
+            <div className="flex items-center mb-4">
+              <img className="w-12 h-12 rounded-full object-cover mr-4"
+                src="https://randomuser.me/api/portraits/women/32.jpg" alt="Sarah Johnson" />
+              <div>
+                <h4 className="font-bold text-white">Sarah Johnson</h4>
+                <p className="text-gray-500 text-sm">Founder, NovelNest</p>
+              </div>
+            </div>
+            <p className="text-gray-400 mb-6">
+              "Thoughty helped me evolve my book subscription idea from a
+              vague concept to a fully-fledged business plan. The Mind Battles
+              were particularly valuable for stress-testing assumptions."
+            </p>
               </div>
               <div className="card-footer">
-                <div className="flex items-center">
-                  <div className="flex text-yellow-400 mr-4">
+            <div className="flex items-center">
+              <div className="flex text-yellow-400 mr-4">
                     {Array(5).fill(null).map((_, idx) => (
                       <FontAwesomeIcon key={idx} icon={faStar} />
                     ))}
@@ -382,23 +382,23 @@ export default function Home() {
           <div className="card p-8 fade-in" style={{transitionDelay: "0.2s"}}>
             <div className="card-content">
               <div className="card-body">
-                <div className="flex items-center mb-4">
-                  <img className="w-12 h-12 rounded-full object-cover mr-4" src="https://randomuser.me/api/portraits/men/54.jpg"
-                    alt="Michael Chen" />
-                  <div>
-                    <h4 className="font-bold text-white">Michael Chen</h4>
-                    <p className="text-gray-500 text-sm">CEO, TechVista</p>
-                  </div>
-                </div>
-                <p className="text-gray-400 mb-6">
-                  "As a serial entrepreneur, I've never found a better tool for
-                  developing ideas. The AI mentor suggested books and frameworks
-                  I'd never encountered that completely changed my approach."
-                </p>
+            <div className="flex items-center mb-4">
+              <img className="w-12 h-12 rounded-full object-cover mr-4" src="https://randomuser.me/api/portraits/men/54.jpg"
+                alt="Michael Chen" />
+              <div>
+                <h4 className="font-bold text-white">Michael Chen</h4>
+                <p className="text-gray-500 text-sm">CEO, TechVista</p>
+              </div>
+            </div>
+            <p className="text-gray-400 mb-6">
+              "As a serial entrepreneur, I've never found a better tool for
+              developing ideas. The AI mentor suggested books and frameworks
+              I'd never encountered that completely changed my approach."
+            </p>
               </div>
               <div className="card-footer">
-                <div className="flex items-center">
-                  <div className="flex text-yellow-400 mr-4">
+            <div className="flex items-center">
+              <div className="flex text-yellow-400 mr-4">
                     {Array(5).fill(null).map((_, idx) => (
                       <FontAwesomeIcon key={idx} icon={faStar} />
                     ))}
@@ -413,23 +413,23 @@ export default function Home() {
           <div className="card p-8 fade-in" style={{transitionDelay: "0.4s"}}>
             <div className="card-content">
               <div className="card-body">
-                <div className="flex items-center mb-4">
-                  <img className="w-12 h-12 rounded-full object-cover mr-4"
-                    src="https://randomuser.me/api/portraits/women/68.jpg" alt="Priya Patel" />
-                  <div>
-                    <h4 className="font-bold text-white">Priya Patel</h4>
-                    <p className="text-gray-500 text-sm">Creative Director, Lumina</p>
-                  </div>
-                </div>
-                <p className="text-gray-400 mb-6">
-                  "When our team hits creative blocks, we turn to Brainstorm
-                  Roulette. It's led to some of our most innovative campaign
-                  ideas. The gamification keeps everyone engaged."
-                </p>
+            <div className="flex items-center mb-4">
+              <img className="w-12 h-12 rounded-full object-cover mr-4"
+                src="https://randomuser.me/api/portraits/women/68.jpg" alt="Priya Patel" />
+              <div>
+                <h4 className="font-bold text-white">Priya Patel</h4>
+                <p className="text-gray-500 text-sm">Creative Director, Lumina</p>
+              </div>
+            </div>
+            <p className="text-gray-400 mb-6">
+              "When our team hits creative blocks, we turn to Brainstorm
+              Roulette. It's led to some of our most innovative campaign
+              ideas. The gamification keeps everyone engaged."
+            </p>
               </div>
               <div className="card-footer">
-                <div className="flex items-center">
-                  <div className="flex text-yellow-400 mr-4">
+            <div className="flex items-center">
+              <div className="flex text-yellow-400 mr-4">
                     {Array(4).map((_, idx) => (
                       <FontAwesomeIcon key={idx} icon={faStar} />
                     ))}
@@ -461,33 +461,33 @@ export default function Home() {
           <div className="card p-8 text-center fade-in">
             <div className="card-content">
               <div className="card-body">
-                <h3 className="text-xl font-bold mb-2 text-white">Explorer</h3>
-                <p className="text-gray-400 mb-6">For casual thinkers</p>
-                <div className="text-4xl font-bold text-white mb-6">Free</div>
-                <ul className="space-y-3 mb-8">
-                  <li className="text-gray-400">
+            <h3 className="text-xl font-bold mb-2 text-white">Explorer</h3>
+            <p className="text-gray-400 mb-6">For casual thinkers</p>
+            <div className="text-4xl font-bold text-white mb-6">Free</div>
+            <ul className="space-y-3 mb-8">
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" /> 3
-                    Active Thought Pods
-                  </li>
-                  <li className="text-gray-400">
+                Active Thought Pods
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" /> Basic
-                    AI Insights
-                  </li>
-                  <li className="text-gray-400">
+                AI Insights
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" /> 1 Mind
-                    Battle per week
-                  </li>
-                  <li className="text-gray-400">
+                Battle per week
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" />
-                    Community Feedback
-                  </li>
-                </ul>
+                Community Feedback
+              </li>
+            </ul>
               </div>
               <div className="card-footer">
-                <a href="#cta"
-                  className="btn-hover inline-flex items-center justify-center w-full px-6 py-3 border border-transparent text-base font-medium rounded-md text-purple-700 bg-white hover:bg-gray-100">
-                  GET STARTED
-                </a>
+            <a href="#cta"
+              className="btn-hover inline-flex items-center justify-center w-full px-6 py-3 border border-transparent text-base font-medium rounded-md text-purple-700 bg-white hover:bg-gray-100">
+              GET STARTED
+            </a>
               </div>
             </div>
           </div>
@@ -499,43 +499,43 @@ export default function Home() {
             </div>
             <div className="card-content">
               <div className="card-body">
-                <h3 className="text-xl font-bold mb-2 text-white">Creator</h3>
-                <p className="text-gray-400 mb-6">For serious entrepreneurs</p>
-                <div className="text-4xl font-bold text-white mb-6">
-                  $19<span className="text-lg text-gray-400">/month</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  <li className="text-gray-400">
+            <h3 className="text-xl font-bold mb-2 text-white">Creator</h3>
+            <p className="text-gray-400 mb-6">For serious entrepreneurs</p>
+            <div className="text-4xl font-bold text-white mb-6">
+              $19<span className="text-lg text-gray-400">/month</span>
+            </div>
+            <ul className="space-y-3 mb-8">
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" />
-                    Unlimited Thought Pods
-                  </li>
-                  <li className="text-gray-400">
+                Unlimited Thought Pods
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" />
-                    Advanced AI Insights
-                  </li>
-                  <li className="text-gray-400">
+                Advanced AI Insights
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" />
-                    Unlimited Mind Battles
-                  </li>
-                  <li className="text-gray-400">
+                Unlimited Mind Battles
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" /> Mind
-                    Mentor AI
-                  </li>
-                  <li className="text-gray-400">
+                Mentor AI
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" />
-                    Brainstorm Roulette
-                  </li>
-                  <li className="text-gray-400">
+                Brainstorm Roulette
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" />
-                    Priority Feedback
-                  </li>
-                </ul>
+                Priority Feedback
+              </li>
+            </ul>
               </div>
               <div className="card-footer">
-                <a href="#cta"
-                  className="btn-hover inline-flex items-center justify-center w-full px-6 py-3 border border-transparent text-base font-medium rounded-md text-white pink-gradient-bg hover:opacity-90">
-                  START FREE TRIAL
-                </a>
+            <a href="#cta"
+              className="btn-hover inline-flex items-center justify-center w-full px-6 py-3 border border-transparent text-base font-medium rounded-md text-white pink-gradient-bg hover:opacity-90">
+              START FREE TRIAL
+            </a>
               </div>
             </div>
           </div>
@@ -544,43 +544,43 @@ export default function Home() {
           <div className="card p-8 text-center fade-in" style={{transitionDelay: "0.4s"}}>
             <div className="card-content">
               <div className="card-body">
-                <h3 className="text-xl font-bold mb-2 text-white">Team</h3>
-                <p className="text-gray-400 mb-6">For collaborative groups</p>
-                <div className="text-4xl font-bold text-white mb-6">
-                  $99<span className="text-lg text-gray-400">/month</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  <li className="text-gray-400">
+            <h3 className="text-xl font-bold mb-2 text-white">Team</h3>
+            <p className="text-gray-400 mb-6">For collaborative groups</p>
+            <div className="text-4xl font-bold text-white mb-6">
+              $99<span className="text-lg text-gray-400">/month</span>
+            </div>
+            <ul className="space-y-3 mb-8">
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" /> All
-                    Creator Features
-                  </li>
-                  <li className="text-gray-400">
+                Creator Features
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" /> Up to
-                    5 Team Members
-                  </li>
-                  <li className="text-gray-400">
+                5 Team Members
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" /> Shared
-                    Thought Pods
-                  </li>
-                  <li className="text-gray-400">
+                Thought Pods
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" /> Team
-                    Analytics
-                  </li>
-                  <li className="text-gray-400">
+                Analytics
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" />
-                    Private Workspaces
-                  </li>
-                  <li className="text-gray-400">
+                Private Workspaces
+              </li>
+              <li className="text-gray-400">
                     <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 mr-2" />
-                    Dedicated Support
-                  </li>
-                </ul>
+                Dedicated Support
+              </li>
+            </ul>
               </div>
               <div className="card-footer">
-                <a href="#cta"
-                  className="btn-hover inline-flex items-center justify-center w-full px-6 py-3 border border-transparent text-base font-medium rounded-md text-purple-700 bg-white hover:bg-gray-100">
-                  CONTACT SALES
-                </a>
+            <a href="#cta"
+              className="btn-hover inline-flex items-center justify-center w-full px-6 py-3 border border-transparent text-base font-medium rounded-md text-purple-700 bg-white hover:bg-gray-100">
+              CONTACT SALES
+            </a>
               </div>
             </div>
           </div>

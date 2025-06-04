@@ -1,5 +1,4 @@
-import { Link, NavLink, useLocation } from "react-router-dom";
-import {} from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faRightToBracket,
@@ -16,8 +15,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useState, useEffect, useRef } from "react";
 import { usePodModal } from "../contexts/PodModalContext";
+import { useAuth } from "../contexts/AuthContext";
 
 import logo from "../assets/logo.png";
+import userProfImage from "../assets/avatar-user-vector.jpg";
 
 export type AuthStates = "SIGNED_OUT" | "GUEST" | "SIGNED_IN";
 
@@ -26,8 +27,6 @@ export const AuthStates = {
   GUEST: "GUEST",
   SIGNED_IN: "SIGNED_IN",
 } as const;
-
-const currentAuthState: AuthStates = AuthStates.SIGNED_IN;
 
 type Notification = {
   id: number;
@@ -70,7 +69,19 @@ function AuthLinks() {
 
 export default function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout, createGuestUser } = useAuth();
+  const navigate = useNavigate();
   const { openModal } = usePodModal();
+
+  // Determine auth state based on actual authentication
+  let currentAuthState: AuthStates;
+  if (!isAuthenticated) {
+    currentAuthState = AuthStates.SIGNED_OUT;
+  } else if (user?.is_guest) {
+    currentAuthState = AuthStates.GUEST;
+  } else {
+    currentAuthState = AuthStates.SIGNED_IN;
+  }
 
   // Dummy notifications; in real app fetch from API
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -124,6 +135,20 @@ export default function NavBar() {
     // navigate or open notification action here
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const handleGuestMode = async () => {
+    try {
+      await createGuestUser();
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Failed to create guest user:', error);
+    }
+  };
+
   return (
     <nav className="fixed w-full z-50 glass-effect">
       <div className="px-4 sm:px-6 lg:px-8">
@@ -148,13 +173,14 @@ export default function NavBar() {
                 </NavLink>
               )}
               {currentAuthState == AuthStates.SIGNED_IN && (
+                <>
                 <NavLink
                   to="/dashboard"
                   className="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium uppercase"
                 >
                   Dashboard
                 </NavLink>
-              )}
+              
               <NavLink
                 to="/brainstorm"
                 className="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium uppercase"
@@ -173,6 +199,8 @@ export default function NavBar() {
               >
                 Mind Mentor
               </NavLink>
+              </>
+              )}
               {currentAuthState == AuthStates.SIGNED_OUT && (
                 <NavLink
                   to="/about"
@@ -187,10 +215,10 @@ export default function NavBar() {
                 <>
                   <AuthLinks />
                   <div className="guest-btn-container">
-                    <NavLink to="/guest" className="guest-btn">
-                      <FontAwesomeIcon icon={faUserClock} className="mr-2" />{" "}
+                    <button onClick={handleGuestMode} className="guest-btn">
+                      <FontAwesomeIcon icon={faUserClock} className="mr-2" />
                       guest mode
-                    </NavLink>
+                    </button>
                   </div>
                 </>
               )}
@@ -281,23 +309,42 @@ export default function NavBar() {
                   {/* dropdown user */}
                   <div className="profile-dropdown navbar-profile">
                     <button className="avatar-btn">
-                      <img
-                        src="./assests/imgs/avatar-user-vector.jpg"
-                        className="avatar-img"
-                        alt="Profile"
-                      />
+                      {user?.avatar ? (
+                        <img
+                          src={user.avatar}
+                          className="avatar-img"
+                          alt="Profile"
+                        />
+                      ) : (
+                        <img
+                          src={userProfImage}
+                          className="avatar-img"
+                          alt="Profile"
+                        />
+                      )}
                     </button>
 
                     <div className="dropdown-content">
                       <div className="dropdown-header">
-                        <img
-                          src="./assests/imgs/avatar-user-vector.jpg"
-                          className="header-avatar"
-                          alt="Profile"
-                        />
+                        {user?.avatar ? (
+                          <img
+                            src={user.avatar}
+                            className="header-avatar"
+                            alt="Profile"
+                          />
+                        ) : (
+                          <img
+                            src={userProfImage}
+                            className="header-avatar"
+                            alt="Profile"
+                          />
+                        )}
                         <div className="user-info">
-                          <div className="user-name">Alexandra Chen</div>
-                          <div className="user-email">alex44@gmail.com</div>
+                          <div className="user-name">{user?.username || user?.first_name + ' ' + user?.last_name || 'User'}</div>
+                          <div className="user-email">{user?.email || 'user@example.com'}</div>
+                          {user?.is_guest && (
+                            <div className="text-xs text-accent mt-1">Guest User</div>
+                          )}
                         </div>
                       </div>
 
@@ -312,10 +359,10 @@ export default function NavBar() {
                         <FontAwesomeIcon icon={faCog} />
                         <span>Settings</span>
                       </NavLink>
-                      <NavLink to="/logout" className="dropdown-item">
+                      <button onClick={handleLogout} className="dropdown-item w-full text-left">
                         <FontAwesomeIcon icon={faSignOutAlt} />
                         <span>Log Out</span>
-                      </NavLink>
+                      </button>
                     </div>
                   </div>
                 </>
@@ -425,13 +472,15 @@ export default function NavBar() {
             >
               <FontAwesomeIcon icon={faCog} className="mr-2" /> Settings
             </NavLink>
-            <NavLink
-              to="/logout"
-              className="dropdown-item block w-full"
-              onClick={() => setIsMobileMenuOpen(false)}
+            <button
+              onClick={() => {
+                handleLogout();
+                setIsMobileMenuOpen(false);
+              }}
+              className="dropdown-item block w-full text-left"
             >
               <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" /> Log Out
-            </NavLink>
+            </button>
           </>
         )}
       </div>

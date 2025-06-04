@@ -16,13 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from users.views import create_guest_user
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('djoser.urls')),
     path('api/auth/', include('djoser.urls.jwt')),
-    path('api/auth/guest/', create_guest_user),
+    path('api/auth/', include('users.urls')),  # Custom auth endpoints
 
     path('api/', include('pods.urls')),
     path('api/', include('battles.urls')),

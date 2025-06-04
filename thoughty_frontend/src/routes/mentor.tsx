@@ -243,8 +243,8 @@ export default function Mentor() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isFilterOpen]);
 
-  return (
-    <div id="mentor" className="page pt-[5rem]">
+    return (
+          <div id="mentor" className="page pt-[5rem]">
       {/* Page Title */}
       <section className="py-8 px-6">
         <div className="container mx-auto">
@@ -269,16 +269,16 @@ export default function Mentor() {
               <div className="space-y-4">
                 {categories.map((category, index) => (
                   <div key={index}>
-                    <div className="flex justify-between mb-1 text-sm">
+                  <div className="flex justify-between mb-1 text-sm">
                       <span>{category.name}</span>
                       <span>{category.percentage}%</span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2.5">
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2.5">
                       <div 
                         className="category-bar h-2.5 rounded-full" 
                         style={{ width: `${category.percentage}%` }}
                       />
-                    </div>
+                </div>
                   </div>
                 ))}
               </div>
@@ -293,10 +293,10 @@ export default function Mentor() {
               <div className="space-y-3">
                 {tones.map((tone, index) => (
                   <div key={index}>
-                    <div className="flex justify-between text-sm mb-1">
+                  <div className="flex justify-between text-sm mb-1">
                       <span>{tone.name}</span>
                       <span>{tone.percentage}%</span>
-                    </div>
+                  </div>
                     <div 
                       className="tone-bar" 
                       style={{ width: `${tone.percentage}%` }}
@@ -404,7 +404,7 @@ export default function Mentor() {
                       key={insight.id}
                       className="insight-card p-4"
                     >
-                      <div className="flex justify-between items-start mb-2">
+                  <div className="flex justify-between items-start mb-2">
                         <span className={`${insight.category === 'optimistic' ? 'tone-tag' : 'category-tag'} px-3 py-1 rounded-full text-xs font-medium`}>
                           {insight.category === 'optimistic' ? 'Optimistic' : 
                            insight.category.charAt(0).toUpperCase() + insight.category.slice(1)}
@@ -416,25 +416,25 @@ export default function Mentor() {
                           <FontAwesomeIcon 
                             icon={insight.isFavorite ? faStarSolid : faStarRegular} 
                           />
-                        </button>
-                      </div>
+                    </button>
+                  </div>
                       <h4 className="font-medium mb-2">{insight.title}</h4>
                       <p className="text-sm text-gray-300">{insight.description}</p>
-                      <div className="mt-3 flex justify-end space-x-2">
+                  <div className="mt-3 flex justify-end space-x-2">
                         <button 
                           onClick={() => dismissInsight(insight.id)}
                           className="text-xs px-2 py-1 rounded bg-[var(--input-bg)] hover:bg-gray-600 transition-colors"
                         >
                           Dismiss
-                        </button>
+                    </button>
                         <button 
                           onClick={() => saveInsight(insight.id)}
                           className="text-xs px-2 py-1 rounded bg-[var(--primary)] hover:bg-[var(--primary-light)] transition-colors"
                         >
                           Save
-                        </button>
-                      </div>
-                    </div>
+                    </button>
+                  </div>
+                  </div>
                   ))
                 )}
               </div>
@@ -455,8 +455,8 @@ export default function Mentor() {
                     key={tip.id}
                     className={`carousel-item ${index === currentTipIndex ? 'active' : ''}`}
                   >
-                    <div className="bg-gradient-to-br from-[var(--dark)] to-[var(--darker)] p-5 rounded-lg mb-4">
-                      <div className="flex justify-between items-start mb-3">
+                  <div className="bg-gradient-to-br from-[var(--dark)] to-[var(--darker)] p-5 rounded-lg mb-4">
+                    <div className="flex justify-between items-start mb-3">
                         <span className={`${tip.category.toLowerCase() === 'philosophical' ? 'tone-tag' : 'category-tag'} px-3 py-1 rounded-full text-xs font-medium`}>
                           {tip.category}
                         </span>
@@ -467,8 +467,8 @@ export default function Mentor() {
                           <FontAwesomeIcon 
                             icon={tip.isFavorite ? faStarSolid : faStarRegular} 
                           />
-                        </button>
-                      </div>
+                      </button>
+                    </div>
                       <h4 className="font-medium mb-2">{tip.title}</h4>
                       <p className="text-sm text-gray-300">{tip.description}</p>
                     </div>
@@ -514,6 +514,6 @@ export default function Mentor() {
       >
         <FontAwesomeIcon icon={faPlus} className="text-white text-xl" />
       </div>
-    </div>
-  );
+  </div>
+    );
 }

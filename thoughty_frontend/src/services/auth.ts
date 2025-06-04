@@ -1,5 +1,7 @@
+import { API_BASE_URL } from "./api";
+
 export interface LoginRequest {
-  username: string;
+  login: string;
   password: string;
 }
 
@@ -7,6 +9,7 @@ export interface RegisterRequest {
   email: string;
   username: string;
   password: string;
+  re_password: string;
 }
 
 export interface AuthResponse {
@@ -17,16 +20,23 @@ export interface AuthResponse {
       id: string;
       username: string;
       email: string;
+      first_name?: string;
+      last_name?: string;
+      avatar?: string;
+      is_guest?: boolean;
+      bio?: string;
+      tokens?: number;
+      badges?: any[];
+      birth_date?: string;
+      date_joined?: string;
     };
-    token: string;
-    refreshToken?: string;
+    access: string;
+    refresh: string;
   };
   errors?: {
     [key: string]: string[];
   };
 }
-
-const API_BASE_URL = "http://localhost:8000/api";
 
 class AuthService {
   private async makeRequest(
@@ -67,14 +77,14 @@ class AuthService {
   }
 
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    return this.makeRequest("/auth/login", {
+    return this.makeRequest("/auth/login/", {
       method: "POST",
       body: JSON.stringify(credentials),
     });
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    return this.makeRequest("/auth/register", {
+    return this.makeRequest("/auth/users/", {
       method: "POST",
       body: JSON.stringify(userData),
     });
@@ -92,9 +102,9 @@ class AuthService {
 
   async refreshToken(): Promise<AuthResponse> {
     const refreshToken = this.getRefreshToken();
-    return this.makeRequest("/auth/refresh", {
+    return this.makeRequest("/auth/refresh/", {
       method: "POST",
-      body: JSON.stringify({ refreshToken }),
+      body: JSON.stringify({ refresh: refreshToken }),
     });
   }
 

@@ -14,6 +14,7 @@ import BattleView from './routes/battle-view'
 import PrivacyPolicy from './routes/privacy-policy'
 import TermsOfService from './routes/terms-of-service'
 import CookiePolicy from './routes/cookie-policy'
+import ProtectedRoute from './components/ProtectedRoute'
 
 const routes: RouteObject[] = [
   {
@@ -21,13 +22,62 @@ const routes: RouteObject[] = [
     element: <Layout />,
     children: [
       { index: true, element: <Home /> },
-      { path: 'dashboard', element: <Dashboard /> },
-      { path: 'pods', element: <Pods /> },
-      { path: 'brainstorm', element: <Brainstorm /> },
-      { path: 'battles', element: <Battles /> },
-      { path: 'battles/:battleId', element: <BattleView /> },
-      { path: 'gamify', element: <Gamify /> },
-      { path: 'mentor', element: <Mentor /> },
+      { 
+        path: 'dashboard', 
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ) 
+      },
+      { 
+        path: 'pods', 
+        element: (
+          <ProtectedRoute>
+            <Pods />
+          </ProtectedRoute>
+        ) 
+      },
+      { 
+        path: 'brainstorm', 
+        element: (
+          <ProtectedRoute>
+            <Brainstorm />
+          </ProtectedRoute>
+        ) 
+      },
+      { 
+        path: 'battles', 
+        element: (
+          <ProtectedRoute>
+            <Battles />
+          </ProtectedRoute>
+        ) 
+      },
+      { 
+        path: 'battles/:battleId', 
+        element: (
+          <ProtectedRoute>
+            <BattleView />
+          </ProtectedRoute>
+        ) 
+      },
+      { 
+        path: 'gamify', 
+        element: (
+          <ProtectedRoute>
+            <Gamify />
+          </ProtectedRoute>
+        ) 
+      },
+      { 
+        path: 'mentor', 
+        element: (
+          <ProtectedRoute>
+            <Mentor />
+          </ProtectedRoute>
+        ) 
+      },
       { path: 'about', element: <About /> },
       { path: 'auth', element: <Auth /> },
       { path: 'privacy-policy', element: <PrivacyPolicy /> },
