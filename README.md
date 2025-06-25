@@ -3,7 +3,7 @@
 Thoughty is a digital platform for the youth that allow them to share their ideas and projects freely, without feeling limited or locked down.
 
 Built with:
-🖥️ Frontend: HTML, CSS, JavaScript
+🖥️ Frontend: React TS
 🧪 Backend: Django + Django REST Framework
 🧠 AI: Integrated LLMs for generation & judgment
 
@@ -54,11 +54,11 @@ cd thoughty
 
 ### Frontend
 
-Open frontend/index.html directly or serve via local server:
+Open frontend/ then serve via npm local server:
 
 ```bash
-cd frontend
-python -m http.server
+cd thoughty_frontend
+npm run dev
 ```
 
 ---

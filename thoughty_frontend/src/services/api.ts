@@ -1,7 +1,8 @@
 import axios, { type AxiosInstance, AxiosError } from 'axios';
 import { toast } from 'react-toastify';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+const isDev = import.meta.env.DEV;
+export const API_BASE_URL = isDev? 'http://127.0.0.1:8000/api' : import.meta.env.VITE_API_URL;
 
 // Create axios instance
 const api: AxiosInstance = axios.create({

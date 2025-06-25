@@ -1,135 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { type Pod, type PodStage, type Comment, STAGES } from '../types/pods';
+import { type Pod, type PodStage, type Comment, type TimelineStatus, STAGES } from '../types/pods';
 import { usePodModal } from '../contexts/PodModalContext';
-
-// Mock data - this would typically come from an API
-const INITIAL_PODS: Pod[] = [
-  {
-    id: 1,
-    title: "Product Launch Strategy",
-    content: "Our product launch is progressing well...",
-    stage: "bloom",
-    progress: 75,
-    lastUpdated: "2 hours ago",
-    isPublic: true,
-    tags: ["marketing", "product", "launch"],
-    version: "1.2.0",
-    stageProgress: 3,
-    currentStageContent: {
-      seed: "Initial product concept and market research completed.",
-      sprout: "Feature development and MVP testing finished.",
-      bloom: "Marketing strategy development and partnerships in progress...",
-      fruit: "Launch preparation and final testing."
-    },
-    timeline: [
-      { stage: 'fruit', status: 'pending' },
-      { stage: 'bloom', status: 'current', startedDate: '1 week ago' },
-      { stage: 'sprout', status: 'completed', completedDate: '2 weeks ago' },
-      { stage: 'seed', status: 'completed', completedDate: '4 weeks ago' }
-    ],
-    comments: [
-      {
-        id: 1,
-        author: "Alex Johnson",
-        content: "Have we considered partnering with tech bloggers for early reviews?",
-        timestamp: "2 days ago",
-        reactions: [
-          { emoji: "👍", count: 2, userReacted: false },
-          { emoji: "❤️", count: 1, userReacted: false },
-          { emoji: "😮", count: 0, userReacted: false }
-        ]
-      },
-      {
-        id: 2,
-        author: "Maria Garcia",
-        content: "I suggest we add a FAQ section to the support materials to reduce initial support load.",
-        timestamp: "1 day ago",
-        reactions: [
-          { emoji: "👍", count: 3, userReacted: false },
-          { emoji: "❤️", count: 2, userReacted: false }
-        ]
-      }
-    ]
-  },
-  {
-    id: 2,
-    title: "Marketing Campaign",
-    content: "Developing comprehensive marketing strategy...",
-    stage: "sprout",
-    progress: 50,
-    lastUpdated: "1 day ago",
-    isPublic: false,
-    tags: ["marketing", "campaign"],
-    version: "1.0.0",
-    stageProgress: 2,
-    currentStageContent: {
-      seed: "Campaign concept and target audience defined.",
-      sprout: "Creative assets development in progress...",
-      bloom: "Campaign execution and optimization.",
-      fruit: "Results analysis and reporting."
-    },
-    timeline: [
-      { stage: 'fruit', status: 'pending' },
-      { stage: 'bloom', status: 'pending' },
-      { stage: 'sprout', status: 'current', startedDate: '3 days ago' },
-      { stage: 'seed', status: 'completed', completedDate: '1 week ago' }
-    ],
-    comments: []
-  },
-  {
-    id: 3,
-    title: "Team Building Workshop",
-    content: "Workshop planning and execution completed...",
-    stage: "fruit",
-    progress: 100,
-    lastUpdated: "1 week ago",
-    isPublic: true,
-    tags: ["team", "workshop", "hr"],
-    version: "2.0.0",
-    stageProgress: 4,
-    currentStageContent: {
-      seed: "Workshop objectives and format decided.",
-      sprout: "Activities planned and materials prepared.",
-      bloom: "Workshop executed successfully.",
-      fruit: "Feedback collected and follow-up actions planned."
-    },
-    timeline: [
-      { stage: 'fruit', status: 'completed', completedDate: '1 week ago' },
-      { stage: 'bloom', status: 'completed', completedDate: '2 weeks ago' },
-      { stage: 'sprout', status: 'completed', completedDate: '3 weeks ago' },
-      { stage: 'seed', status: 'completed', completedDate: '1 month ago' }
-    ],
-    comments: []
-  },
-  {
-    id: 4,
-    title: "New Feature Ideas",
-    content: "Brainstorming and initial concept development...",
-    stage: "seed",
-    progress: 25,
-    lastUpdated: "3 days ago",
-    isPublic: false,
-    tags: ["features", "brainstorming"],
-    version: "0.1.0",
-    stageProgress: 1,
-    currentStageContent: {
-      seed: "Initial feature concepts and user research in progress...",
-      sprout: "Feature specification and design planning.",
-      bloom: "Development and testing.",
-      fruit: "Feature launch and user feedback."
-    },
-    timeline: [
-      { stage: 'fruit', status: 'pending' },
-      { stage: 'bloom', status: 'pending' },
-      { stage: 'sprout', status: 'pending' },
-      { stage: 'seed', status: 'current', startedDate: '1 week ago' }
-    ],
-    comments: []
-  }
-];
+import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
 
 export function usePods() {
-  const [pods, setPods] = useState<Pod[]>(INITIAL_PODS);
+  const { user } = useAuth();
+
+  const [pods, setPods] = useState<Pod[]>([]);
   const [selectedPod, setSelectedPod] = useState<Pod | null>(null);
   const [currentStage, setCurrentStage] = useState<PodStage>('seed');
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -137,13 +15,125 @@ export function usePods() {
 
   const { setOnPodCreated } = usePodModal();
 
+  /* -------------------------------------------------
+   * Helpers
+   * ------------------------------------------------*/
+
+  /**
+   * Format an ISO date-time string into "x units ago".
+   */
+  const formatTimeAgo = (dateString: string): string => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    //   [factor, unit]
+    const intervals: [number, string][] = [
+      [60, 'second'],
+      [60, 'minute'],
+      [24, 'hour'],
+      [7, 'day'],
+      [4.34524, 'week'],
+      [12, 'month'],
+      [Number.MAX_SAFE_INTEGER, 'year']
+    ];
+
+    let i = 0;
+    let count = seconds;
+    while (count >= intervals[i][0] && i < intervals.length - 1) {
+      count = Math.floor(count / intervals[i][0]);
+      i++;
+    }
+    const unit = intervals[i][1];
+    return `${count} ${unit}${count !== 1 ? 's' : ''} ago`;
+  };
+
+  /**
+   * Convert backend Pod shape → frontend Pod shape
+   */
+  interface BackendTag { id: number; name: string; }
+  interface BackendPod {
+    id: number;
+    user: number;
+    title: string;
+    content: string;
+    stage: PodStage;
+    version: number;
+    is_public: boolean;
+    tags: BackendTag[];
+    created_at: string;
+    timestamp: string;
+  }
+
+  const transformBackendPod = (data: BackendPod): Pod => {
+    // Map backend stage (idea/draft/review/final) → UI stage (seed/sprout/bloom/fruit)
+    const mapStage = (backendStage: string): PodStage => {
+      switch (backendStage) {
+        case 'idea':
+          return 'seed';
+        case 'draft':
+          return 'sprout';
+        case 'review':
+          return 'bloom';
+        case 'final':
+          return 'fruit';
+        default:
+          return 'seed';
+      }
+    };
+
+    const uiStage = mapStage(data.stage as string);
+
+    const stageIndex = STAGES.indexOf(uiStage);
+    const progress = ((stageIndex + 1) / STAGES.length) * 100;
+
+    const timeline = STAGES.map((stage) => {
+      let status: TimelineStatus = 'pending';
+      if (stageIndex > STAGES.indexOf(stage)) {
+        status = 'completed';
+      } else if (stage === uiStage) {
+        status = 'current';
+      }
+
+      return {
+        stage,
+        status,
+        completedDate: status === 'completed' ? formatTimeAgo(data.timestamp) : undefined,
+        startedDate: status === 'current' ? formatTimeAgo(data.timestamp) : undefined,
+      };
+    });
+
+    const currentStageContent: Record<string, string> = {
+      seed: '',
+      sprout: '',
+      bloom: '',
+      fruit: '',
+    };
+    currentStageContent[uiStage] = data.content;
+
+    return {
+      id: data.id,
+      title: data.title,
+      content: data.content,
+      stage: uiStage,
+      progress,
+      lastUpdated: formatTimeAgo(data.timestamp),
+      timeline,
+      comments: [],
+      isPublic: data.is_public,
+      tags: (data.tags || []).map((t) => t.name),
+      version: data.version?.toString() || '1.0.0',
+      stageProgress: stageIndex + 1,
+      currentStageContent,
+    };
+  };
+
   // Register callback for global pod creation
   useEffect(() => {
     setOnPodCreated((newPod: Pod) => {
-      if (newPod == null) {
-        return;
-      }
-      
+      if (!newPod) return; // Runtime safeguard – should never hit.
+
+      console.log('New pod created:', newPod);
+
       const safePod: Pod = {
         ...newPod,
         comments: newPod.comments || [],
@@ -153,7 +143,7 @@ export function usePods() {
       };
       setPods(prevPods => [safePod, ...prevPods]);
     });
-  }, []);
+  }, [setOnPodCreated]);
 
   // Modal management
   useEffect(() => {
@@ -332,6 +322,30 @@ export function usePods() {
       setCurrentStage(nextStage);
     }
   }, [selectedPod]);
+
+  /* -------------------------------------------------
+   * Fetch user pods from backend
+   * ------------------------------------------------*/
+
+  useEffect(() => {
+    const fetchUserPods = async () => {
+      if (!user) {
+        setPods([]);
+        return;
+      }
+
+      try {
+        const response = await api.get('/pods/mine/');
+        const backendPods: BackendPod[] = response.data || [];
+        const transformed = backendPods.map(transformBackendPod);
+        setPods(transformed);
+      } catch (error) {
+        console.error('Failed to load pods:', error);
+      }
+    };
+
+    fetchUserPods();
+  }, [user]);
 
   return {
     // State

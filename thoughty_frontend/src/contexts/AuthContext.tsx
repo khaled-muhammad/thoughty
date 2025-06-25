@@ -108,6 +108,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         password: credentials.password
       });
 
+      alert(response.data!.user.email);
+      alert('response.data!.access');
       if (response.success && response.data) {
         authService.setToken(response.data.access);  // Changed from token to access
         authService.setRefreshToken(response.data.refresh);  // Changed from refreshToken to refresh

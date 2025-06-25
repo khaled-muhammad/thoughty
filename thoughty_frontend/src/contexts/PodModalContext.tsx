@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import api from '../services/api';
+import type { PodStage, Comment as PodComment, TimelineItem } from '../types/pods';
+import { STAGES } from '../types/pods';
 
 interface NewPodData {
   title: string;
@@ -17,14 +20,17 @@ interface Pod {
   stage: 'seed' | 'sprout' | 'bloom' | 'fruit';
   progress: number;
   lastUpdated: string;
-  timeline: any[];
-  comments: any[];
+  timeline: TimelineItem[];
+  comments: PodComment[];
   isPublic: boolean;
   tags: string[];
   version: string;
   stageProgress: number;
   currentStageContent: { [key: string]: string };
 }
+
+// A utility type alias for the listener signature so we don't repeat.
+type PodCreatedListener = (pod: Pod) => void;
 
 interface PodModalContextType {
   isOpen: boolean;
@@ -33,8 +39,8 @@ interface PodModalContextType {
   newPodData: NewPodData;
   setNewPodData: React.Dispatch<React.SetStateAction<NewPodData>>;
   handleCreatePod: () => void;
-  onPodCreated: ((pod: Pod) => void) | null;
-  setOnPodCreated: (callback: ((pod: Pod) => void) | null) => void;
+  onPodCreated: PodCreatedListener | null;
+  setOnPodCreated: (callback: PodCreatedListener | null) => void;
 }
 
 const PodModalContext = createContext<PodModalContextType | undefined>(undefined);
@@ -53,7 +59,11 @@ interface PodModalProviderProps {
 
 export const PodModalProvider: React.FC<PodModalProviderProps> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [onPodCreated, setOnPodCreated] = useState<((pod: Pod) => void) | null>(null);
+  // Keeps the current listener (if any)
+  const [onPodCreated, setOnPodCreatedState] = useState<PodCreatedListener | null>(null);
+  // Buffer of pods created before a listener is registered (e.g. when user creates
+  // a pod from another page before the Pods grid has mounted).
+  const [, setPendingPods] = useState<Pod[]>([]);
   const [newPodData, setNewPodData] = useState<NewPodData>({
     title: '',
     content: '',
@@ -64,6 +74,7 @@ export const PodModalProvider: React.FC<PodModalProviderProps> = ({ children }) 
   });
   
   const navigate = useNavigate();
+  const location = useLocation();
 
   const openModal = () => {
     setIsOpen(true);
@@ -83,54 +94,115 @@ export const PodModalProvider: React.FC<PodModalProviderProps> = ({ children }) 
     });
   };
 
-  const handleCreatePod = () => {
+  const handleCreatePod = async () => {
     if (!newPodData.title.trim() || !newPodData.content.trim()) return;
 
-    // Create the new pod object
-    const newPod: Pod = {
-      id: Date.now(),
-      title: newPodData.title,
-      content: newPodData.content,
-      stage: newPodData.stage,
-      progress: 25,
-      lastUpdated: 'just now',
-      isPublic: newPodData.isPublic,
-      tags: newPodData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-      version: newPodData.version,
-      stageProgress: 1,
-      currentStageContent: {
-        [newPodData.stage]: newPodData.content,
-        seed: '',
-        sprout: '',
-        bloom: '',
-        fruit: ''
-      },
-      timeline: [
-        { stage: 'fruit', status: 'pending' },
-        { stage: 'bloom', status: 'pending' },
-        { stage: 'sprout', status: 'pending' },
-        { stage: 'seed', status: 'current', startedDate: 'just now' }
-      ],
-      comments: []
+    // Map UI stage → backend stage value
+    const uiToApiStage: Record<string, string> = {
+      seed: 'idea',
+      sprout: 'draft',
+      bloom: 'review',
+      fruit: 'final',
     };
 
-    newPod.currentStageContent[newPodData.stage] = newPodData.content;
+    const payload = {
+      title: newPodData.title.trim(),
+      content: newPodData.content.trim(),
+      stage: uiToApiStage[newPodData.stage],
+      is_public: newPodData.isPublic,
+      tags: newPodData.tags
+        .split(',')
+        .map(name => name.trim())
+        .filter(Boolean)
+        .map(name => ({ name })),
+    };
 
-    // Call the callback if it exists (for local state updates)
-    if (onPodCreated) {
-      onPodCreated(newPod);
+    const res = await api.post('/pods/', payload);
+
+    // --------------------------------------------------
+    // Inform listeners so current Pods list refreshes.
+    // --------------------------------------------------
+    if (res && res.data) {
+      interface BackendTag { id: number; name: string; }
+      interface BackendPod {
+        id: number;
+        title: string;
+        content: string;
+        stage: string;
+        is_public: boolean;
+        tags?: BackendTag[];
+        version?: string;
+      }
+
+      const backendPod = res.data as BackendPod;
+
+      // Map backend stage → UI stage again
+      const mapStage = (backendStage: string): PodStage => {
+        switch (backendStage) {
+          case 'idea': return 'seed';
+          case 'draft': return 'sprout';
+          case 'review': return 'bloom';
+          case 'final': return 'fruit';
+          default: return 'seed';
+        }
+      };
+
+      const uiStage = mapStage(backendPod.stage);
+
+      const stageIndex = STAGES.indexOf(uiStage);
+      const progress = ((stageIndex + 1) / STAGES.length) * 100;
+
+      const uiPod = {
+        id: backendPod.id,
+        title: backendPod.title,
+        content: backendPod.content,
+        stage: uiStage,
+        progress,
+        lastUpdated: 'just now',
+        isPublic: backendPod.is_public,
+        tags: (backendPod.tags || []).map((t: BackendTag) => t.name),
+        version: backendPod.version?.toString() || '1.0.0',
+        stageProgress: stageIndex + 1,
+        currentStageContent: {
+          seed: '',
+          sprout: '',
+          bloom: '',
+          fruit: '',
+          [uiStage]: backendPod.content,
+        },
+        timeline: [],
+        comments: [],
+      } as Pod; // cast to local interface Pod
+
+      if (onPodCreated) {
+        onPodCreated(uiPod);
+      } else {
+        // No listener registered yet – store it so it can be replayed later.
+        setPendingPods(prev => [...prev, uiPod]);
+      }
     }
-    
-    console.log('Pod created:', newPod);
-    
+
     closeModal();
-    
-    // Navigate to pods page after successful creation
-    navigate('/pods');
-    
-    // Show success message (you can implement a toast system later)
-    // toast.success('Pod created successfully!');
+
+    // Navigate to pods page if we aren't already there
+    if (location.pathname !== '/pods') {
+      navigate('/pods');
+    }
   };
+
+  // Custom setter that flushes any buffered pods to the newly-registered listener.
+  const setOnPodCreated = React.useCallback((callback: PodCreatedListener | null) => {
+    setOnPodCreatedState(() => callback);
+    if (!callback) return;
+
+    // Flush any pods that were created before the listener was registered.
+    setPendingPods(prev => {
+      if (prev.length) {
+        prev.forEach(pod => callback(pod));
+      }
+      return [];
+    });
+  }, []);
 
   const value: PodModalContextType = {
     isOpen,
@@ -140,7 +212,7 @@ export const PodModalProvider: React.FC<PodModalProviderProps> = ({ children }) 
     setNewPodData,
     handleCreatePod,
     onPodCreated,
-    setOnPodCreated
+    setOnPodCreated,
   };
 
   return (

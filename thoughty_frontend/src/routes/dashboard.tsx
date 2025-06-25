@@ -26,6 +26,8 @@ import {
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { usePodModal } from '../contexts/PodModalContext';
 import { Link, Navigate } from 'react-router-dom';
+import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 // Mock data interfaces
 interface Pod {
@@ -59,6 +61,44 @@ interface UserStats {
   currentPoints: number;
 }
 
+// Utility: format timestamps into "x units ago"
+const formatTimeAgo = (dateString: string): string => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  const intervals: [number, string][] = [
+    [60, 'second'],
+    [60, 'minute'],
+    [24, 'hour'],
+    [7, 'day'],
+    [4.34524, 'week'],
+    [12, 'month'],
+    [Number.MAX_SAFE_INTEGER, 'year']
+  ];
+  let i = 0;
+  let count = seconds;
+  while (count >= intervals[i][0] && i < intervals.length - 1) {
+    count = Math.floor(count / intervals[i][0]);
+    i++;
+  }
+  const unit = intervals[i][1];
+  return `${count} ${unit}${count !== 1 ? 's' : ''} ago`;
+};
+
+// Transform backend pod -> UI pod
+const transformPod = (data: any): Pod => ({
+  id: data.id.toString(),
+  title: data.title,
+  author: typeof data.user === 'object' && data.user?.username ? data.user.username : `User ${data.user}`,
+  timeAgo: formatTimeAgo(data.created_at ?? data.timestamp),
+  content: data.content,
+  tags: (data.tags || []).map((t: any) => `#${t.name}`),
+  likes: data.recent_votes ?? 0,
+  comments: 0,
+  isLiked: false,
+  isBookmarked: false,
+});
+
 export default function Dashboard() {
   // State management
   const [activeTab, setActiveTab] = useState<'trending' | 'new' | 'recommended'>('trending');
@@ -76,87 +116,57 @@ export default function Dashboard() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const { openModal } = usePodModal();
+  const { isAuthenticated } = useAuth();
   
-  // Mock data initialization
+  // Fetch pods whenever the active tab changes or auth status updates
   useEffect(() => {
-    const mockPods: Pod[] = [
-      {
-        id: '1',
-        title: 'The Future of AI Consciousness',
-        author: 'NeuroExplorer',
-        timeAgo: '2 hours ago',
-        content: 'Exploring the ethical implications and technological breakthroughs that might lead to artificial consciousness in our lifetime...',
-        tags: ['#AI', '#Ethics', '#Future'],
-        likes: 124,
-        comments: 42,
-        isLiked: false,
-        isBookmarked: false
-      },
-      {
-        id: '2',
-        title: 'Quantum Mind Theories',
-        author: 'QuantumThinker',
-        timeAgo: '5 hours ago',
-        content: 'How quantum mechanics might explain consciousness and the nature of human thought processes at a fundamental level...',
-        tags: ['#Quantum', '#Neuroscience', '#Physics'],
-        likes: 89,
-        comments: 31,
-        isLiked: true,
-        isBookmarked: false
-      },
-      {
-        id: '3',
-        title: 'The Art of Creative Block',
-        author: 'ArtMind',
-        timeAgo: '1 day ago',
-        content: 'Strategies and psychological insights to overcome creative blocks and unlock your artistic potential...',
-        tags: ['#Creativity', '#Psychology', '#Art'],
-        likes: 76,
-        comments: 28,
-        isLiked: false,
-        isBookmarked: true
-      }
-    ];
+    const fetchPods = async () => {
+      setIsLoading(true);
+      try {
+        const endpointMap = {
+          trending: '/pods/trending/',
+          new: '/pods/new/',
+          recommended: '/pods/recommended/',
+        } as const;
 
+        // Skip recommended if user is not authenticated
+        if (activeTab === 'recommended' && !isAuthenticated) {
+          setPods([]);
+          setIsLoading(false);
+          return;
+        }
+
+        const res = await api.get(endpointMap[activeTab]);
+        const fetchedPods: Pod[] = (res.data || []).map((item: any) => transformPod(item));
+        setPods(fetchedPods);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPods();
+
+    // For now, keep mock activities
     const mockActivities: Activity[] = [
       {
         id: '1',
         type: 'comment',
-        description: 'Commented on Quantum Mind Theories',
+        description: 'Commented on a pod',
         timeAgo: '2 hours ago',
         icon: faComment,
-        color: 'primary'
+        color: 'primary',
       },
-      {
-        id: '2',
-        type: 'create',
-        description: 'Created pod Consciousness in Machines',
-        timeAgo: '1 day ago',
-        icon: faPlus,
-        color: 'secondary'
-      },
-      {
-        id: '3',
-        type: 'battle',
-        description: 'Won battle in AI Ethics',
-        timeAgo: '3 days ago',
-        icon: faTrophy,
-        color: 'accent'
-      }
     ];
-
-    setPods(mockPods);
     setActivities(mockActivities);
-  }, []);
+  }, [activeTab, isAuthenticated]);
 
   // Event handlers
   const handleTabChange = (tab: 'trending' | 'new' | 'recommended') => {
-    setActiveTab(tab);
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+    }
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -241,6 +251,11 @@ export default function Dashboard() {
   });
 
   const progressPercentage = (userStats.currentPoints / userStats.nextLevelPoints) * 100;
+
+  // Redirect unauthenticated users away from recommended
+  if (activeTab === 'recommended' && !isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
 
     return (
     <div id="dashboard" className="page min-h-screen overflow-x-hidden">

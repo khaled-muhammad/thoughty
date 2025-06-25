@@ -28,15 +28,18 @@ class Pod(models.Model):
     Represents a thought pod - the core entity of the application.
     Tracks content, metadata, and ownership information.
     """
-    user       = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    title      = models.CharField(max_length=150)
-    content    = models.TextField(max_length=500)
-    stage      = models.CharField(choices=Stage.choices, max_length=20, default=Stage.IDEA)
-    tags       = models.ManyToManyField('Tag', blank=True)
-    version    = models.IntegerField(default=1)
-    is_public  = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    timestamp  = models.DateTimeField(auto_now=True)
+    user                    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title                   = models.CharField(max_length=150)
+    content                 = models.TextField(max_length=500)
+    stage                   = models.CharField(choices=Stage.choices, max_length=20, default=Stage.IDEA)
+    tags                    = models.ManyToManyField('Tag', blank=True)
+    version                 = models.CharField(max_length=20, default='1.0.0', validators=[validate_version])
+    is_public               = models.BooleanField(default=True)
+    progress                = models.IntegerField(default=0)
+    stage_progress          = models.IntegerField(default=0)
+    current_stage_content   = models.JSONField(default=dict)
+    created_at              = models.DateTimeField(auto_now_add=True)
+    timestamp               = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.title} ({self.user.username})"

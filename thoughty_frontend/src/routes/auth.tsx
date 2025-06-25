@@ -86,7 +86,7 @@ export default function Auth() {
 
     if (!loginData.username.trim()) {
       newErrors.username = 'Username is required';
-    } else if (!validateUsername(loginData.username)) {
+    } else if (loginData.username.length < 3) {
       newErrors.username = 'Username must be 3-20 characters, alphanumeric and underscores only';
     }
 
@@ -155,9 +155,9 @@ export default function Auth() {
 
       if (response.success && response.data) {
         // Store auth data
-        authService.setToken(response.data.token);
-        if (response.data.refreshToken) {
-          authService.setRefreshToken(response.data.refreshToken);
+        authService.setToken(response.data.access);
+        if (response.data.refresh) {
+          authService.setRefreshToken(response.data.refresh);
         }
         authService.setUser(response.data.user);
 

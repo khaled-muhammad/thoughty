@@ -1,0 +1,552 @@
+import './style.css'
+
+let mouseX = 0;
+let mouseY = 0
+let mobile = false
+let secretCode = ''
+let progress = 0
+let showingLogo = false
+
+let secondPuzzleOpen = false
+let hexCode = ''
+let animating = false
+let thirdPuzzleOpen = false
+
+let selectedStars = []
+let gameComplete = false
+
+const starPositions = [
+  { id: 1, x: 50, y: 25, size: 8 },
+  { id: 2, x: 40, y: 20, size: 6 },
+  { id: 3, x: 35, y: 30, size: 7 },
+  { id: 4, x: 38, y: 45, size: 8 },
+  { id: 5, x: 45, y: 50, size: 6 },
+  { id: 6, x: 50, y: 55, size: 7 },
+  { id: 7, x: 62, y: 45, size: 6 },
+  { id: 8, x: 65, y: 30, size: 4 },
+  { id: 9, x: 60, y: 20, size: 8 },
+]
+
+const rightOrder = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+const bgStarArray = []
+for(let i = 0; i < 50; i++) {
+  bgStarArray.push({
+    id: i + 100,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 3 + 1,
+    opacity: Math.random() * 0.6 + 0.2
+  })
+}
+
+let modalOpen = false
+
+let userAgent = navigator.userAgent.toLowerCase()
+mobile = /android|phone|tablet|mobile/i.test(userAgent)
+
+function makeBackgroundStars() {
+  const container = document.getElementById('bg-stars')
+  
+  bgStarArray.forEach(star => {
+    const starDiv = document.createElement('div')
+    starDiv.className = 'absolute rounded-full bg-white animate-pulse'
+    starDiv.style.left = `${star.x}%`
+    starDiv.style.top = `${star.y}%`
+    starDiv.style.width = `${star.size}px`
+    starDiv.style.height = `${star.size}px`
+    starDiv.style.opacity = star.opacity
+    starDiv.style.animationDelay = `${Math.random() * 3}s`
+    starDiv.style.animationDuration = `${2 + Math.random() * 2}s`
+    container.appendChild(starDiv)
+  })
+}
+
+function onSecretInput(e) {
+  secretCode = e.target.value
+  const inputField = document.getElementById('secret-input')
+  const openBtn = document.getElementById('open-secret')
+  const redBox = document.getElementById('mys-2')
+  const redBoxShadow = document.getElementById('mys-2-layer2')
+  
+  if (secretCode.length == 0) {
+    progress = 0
+    inputField.classList.remove('px-6', 'px-4', 'px-2')
+    inputField.classList.add('px-8')
+    return
+  }
+
+  if (secretCode[0] == "K") {
+    progress = 1
+    inputField.classList.remove('px-8', 'px-4', 'px-2')
+    inputField.classList.add('px-6')
+    redBox.classList.remove('hidden')
+    redBoxShadow.classList.remove('hidden')
+    
+    if (secretCode.length > 1 && secretCode[1] == "V") {
+      progress = 2
+      inputField.classList.remove('px-8', 'px-6', 'px-2')
+      inputField.classList.add('px-4')
+      
+      if (secretCode.length > 2 && secretCode[2] == "M") {
+        progress = 3
+        inputField.classList.remove('px-8', 'px-6', 'px-4')
+        inputField.classList.add('px-2')
+        openBtn.classList.remove('hidden')
+      }
+    }
+  } else {
+    progress = 0
+    redBox.classList.add('hidden')
+    redBoxShadow.classList.add('hidden')
+    openBtn.classList.add('hidden')
+  }
+}
+
+function getMovement() {
+  let range = mobile ? 4 : 5
+  
+  let xPct = (mouseX / window.innerWidth) * 2 - 1
+  let yPct = (mouseY / window.innerHeight) * 2 - 1
+  
+  return {
+    x: xPct * range,
+    y: yPct * range
+  }
+}
+
+function updateElementPositions() {
+  const movement = getMovement()
+  const greenElement = document.getElementById('mys-1')
+  const greenShadow = document.getElementById('mys-1-layer2')
+  const redElement = document.getElementById('mys-2')
+  const redShadow = document.getElementById('mys-2-layer2')
+  
+  const size = mobile ? 42 : 32
+  
+  greenElement.style.top = `calc(22px + ${mobile ? -movement.y*4 : -movement.y}px)`
+  greenElement.style.left = `calc(22px + ${mobile ? -movement.x*4 : -movement.x}px)`
+  greenElement.style.width = `${size}px`
+  greenElement.style.height = `${size}px`
+  
+  greenShadow.style.top = `calc(22px + ${mobile ? movement.y*4 : movement.y}px)`
+  greenShadow.style.left = `calc(22px + ${mobile ? movement.x*4 : movement.x}px)`
+  greenShadow.style.width = `${size}px`
+  greenShadow.style.height = `${size}px`
+  
+  if (progress > 0) {
+    redElement.style.bottom = `calc(22px + ${mobile ? -movement.y*4 : -movement.y}px)`
+    redElement.style.right = `calc(22px + ${mobile ? movement.x*4 : movement.x}px)`
+    redElement.style.width = `${size}px`
+    redElement.style.height = `${size}px`
+    
+    redShadow.style.bottom = `calc(22px + ${mobile ? movement.y*4 : movement.y}px)`
+    redShadow.style.right = `calc(22px + ${mobile ? -movement.x*4 : -movement.x}px)`
+    redShadow.style.width = `${size}px`
+    redShadow.style.height = `${size}px`
+  }
+
+  updateTextSizes()
+  checkForLogoHover()
+  handleGlowEffect()
+}
+
+function updateTextSizes() {
+  const fontSize = mobile ? '22px' : '18px'
+  document.querySelectorAll('.mys-1 span, .mys-2 span').forEach(text => {
+    text.style.fontSize = fontSize
+  })
+}
+
+function checkForLogoHover() {
+  const logoSection = document.getElementById('mystery-3')
+  const logo = document.getElementById('m-logo')
+  
+  if (logoSection && progress > 1) {
+    const rect = logoSection.getBoundingClientRect()
+    const isHovering = 
+      mouseX >= rect.left && 
+      mouseX <= rect.right && 
+      mouseY >= rect.top && 
+      mouseY <= rect.bottom
+    
+    showingLogo = isHovering
+    logo.style.opacity = showingLogo ? '1' : '0.005'
+    logo.style.filter = showingLogo ? 'drop-shadow(0 0 10px rgba(0, 255, 0, 0.8))' : 'none'
+  } else {
+    showingLogo = false
+    logo.style.opacity = '0.005'
+    logo.style.filter = 'none'
+  }
+}
+
+function handleGlowEffect() {
+  const glowDiv = document.getElementById('x-ray')
+  
+  if (progress > 1) {
+    glowDiv.classList.add('bg-green-400/70', 'shadow-green-400/70', 'drop-shadow-2xl', 'shadow-2xl', 'blur-2xl', '-translate-50')
+    
+    if (progress > 2) {
+      glowDiv.style.opacity = '0.1'
+      glowDiv.style.bottom = '0'
+      glowDiv.style.left = '0'
+    } else {
+      glowDiv.style.opacity = '0.6'
+      glowDiv.style.top = `${mouseY}px`
+      glowDiv.style.left = `${mouseX}px`
+    }
+  } else {
+    glowDiv.style.opacity = '0'
+    glowDiv.classList.remove('bg-green-400/70', 'shadow-green-400/70', 'drop-shadow-2xl', 'shadow-2xl', 'blur-2xl', '-translate-50')
+  }
+}
+
+function openModal() {
+  modalOpen = true
+  const modal = document.getElementById('modal')
+  const titleEl = document.getElementById('modal-title')
+  const contentEl = document.getElementById('modal-content')
+  
+  document.body.style.overflow = 'hidden'
+  
+  if (gameComplete) {
+    titleEl.textContent = 'MysUiz Finished'
+    contentEl.innerHTML = `
+      <div class="flex flex-col items-center">
+        <div class="w-24 h-24 mb-6 rounded-full flex items-center justify-center bg-gradient-to-b from-slate-500 to-slate-600 shadow-lg drop-shadow-2xl">
+          <i class="fas fa-star fa-2x" style="color: white;"></i>
+        </div>
+        
+        <h3 class="text-2xl bangers-regular text-center mb-4">Congrats!</h3>
+        
+        <p class="text-center mb-6 text-lg">
+          You have finally reached the final destination! Please, keep in mind that the final code is: <span class="text-cyan-400 font-bold">KVM Forever</span>
+        </p>
+        
+        <div class="bg-slate-700 p-4 rounded-xl w-full mb-6">
+          <p class="text-green-300 flex justify-center gap-5">
+            <i class="fas fa-star"></i>
+            All puzzles got solved!
+            <i class="fas fa-star"></i>
+          </p>
+        </div>
+      </div>
+    `
+  } else {
+    titleEl.textContent = 'Secret Discovered'
+    contentEl.innerHTML = `
+      <div class="flex flex-col items-center">
+        <div class="w-20 h-20 mb-4 bg-green-500 rounded-full flex items-center justify-center shadow-green-400/40 shadow-lg">
+          <span class="text-4xl rock-salt-regular">!</span>
+        </div>
+        
+        <p class="text-center mb-6 text-lg">
+          You've uncovered the hidden code sequence: <span class="text-green-400 font-bold">KVM</span>
+        </p>
+        
+        <div class="bg-slate-700 p-4 rounded-xl w-full mb-6">
+          <p class="text-green-300 font-mono">
+            <span class="text-pink-400">const</span> <span class="text-blue-400">secretKey</span> = <span class="text-amber-300">"KVM"</span>;
+          </p>
+        </div>
+        
+        <button id="continue-btn" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-full transition-colors duration-200 flex justify-center items-center">
+          <span class="bangers-regular text-2xl mr-4">NEXT</span>
+          <i class="fas fa-external-link-alt text-yellow-400"></i>
+        </button>
+      </div>
+    `
+    
+    setTimeout(() => {
+      document.getElementById('continue-btn')?.addEventListener('click', () => {
+        closeModal()
+        secondPuzzleOpen = true
+        const puzzle2 = document.getElementById('puzzle-2')
+        puzzle2.classList.remove('hidden')
+        puzzle2.classList.add('flex')
+        setTimeout(() => {
+          puzzle2.scrollIntoView({ behavior: 'smooth' })
+        }, 500)
+      })
+    }, 100)
+  }
+  
+  modal.classList.remove('opacity-0', 'pointer-events-none')
+  modal.classList.add('opacity-100')
+  
+  setTimeout(() => {
+    modal.querySelector('.relative').classList.remove('scale-95', 'translate-y-8')
+    modal.querySelector('.relative').classList.add('scale-100', 'translate-y-0')
+    modal.querySelector('.bg-black\\/50').classList.remove('opacity-0')
+    modal.querySelector('.bg-black\\/50').classList.add('opacity-100')
+  }, 10)
+}
+
+function closeModal() {
+  modalOpen = false
+  const modal = document.getElementById('modal')
+  
+  modal.querySelector('.relative').classList.remove('scale-100', 'translate-y-0')
+  modal.querySelector('.relative').classList.add('scale-95', 'translate-y-8')
+  modal.querySelector('.bg-black\\/50').classList.remove('opacity-100')
+  modal.querySelector('.bg-black\\/50').classList.add('opacity-0')
+  
+  setTimeout(() => {
+    modal.classList.remove('opacity-100')
+    modal.classList.add('opacity-0', 'pointer-events-none')
+    document.body.style.overflow = ''
+  }, 300)
+}
+
+function updateHexDisplay() {
+  const display = document.querySelector('#code2-display')
+  const deleteBtn = document.querySelector('#delete-btn')
+  
+  display.textContent = hexCode
+  deleteBtn.classList.toggle('hidden', hexCode == '')
+  
+  if (hexCode == '4B 56 4D') {
+    setTimeout(() => {
+      animating = true
+      thirdPuzzleOpen = true
+      
+      const waveEl = document.querySelector('#wave-container')
+      waveEl.classList.remove('opacity-0')
+      waveEl.classList.add('opacity-100')
+      
+      const puzzle3 = document.querySelector('#puzzle-3')
+      puzzle3.classList.remove('hidden')
+      puzzle3.classList.add('flex')
+      
+      setTimeout(() => {
+        puzzle3.scrollIntoView({ behavior: 'smooth' })
+      }, 500)
+      
+      setTimeout(() => {
+        animating = false
+        waveEl.classList.remove('opacity-100')
+        waveEl.classList.add('opacity-0')
+      }, 1500)
+    }, 1000)
+  }
+}
+
+function updateProgressBar() {
+  const bar = document.querySelector('#fillup')
+  
+  if (hexCode == '4B 56 4D') {
+    bar.classList.remove('h-0');
+    bar.classList.remove('h-35');
+    bar.classList.remove('h-70');
+
+    bar.classList.add('h-100');
+  } else if (hexCode.startsWith('4B 56')) {
+    bar.classList.remove('h-0');
+    bar.classList.remove('h-35');
+    bar.classList.remove('h-100');
+
+    bar.classList.add('h-70');
+  } else if (hexCode.startsWith('4B')) {
+    bar.classList.remove('h-0');
+    bar.classList.remove('h-70');
+    bar.classList.remove('h-100');
+
+    bar.classList.add('h-35');
+  } else {
+    bar.classList.remove('h-35');
+    bar.classList.remove('h-70');
+    bar.classList.remove('h-100');  
+    bar.classList.add('h-0');
+  }
+}
+
+function onStarClick(starId) {
+  if (gameComplete) {
+    return;
+  }
+
+  const alreadySelected = selectedStars.indexOf(starId);
+
+  if (alreadySelected != -1) {
+    selectedStars.splice(alreadySelected, 1);
+  } else {
+    selectedStars.push(starId);
+
+    if (selectedStars.length == rightOrder.length) {
+      let allMatch = true;
+      for (let i = 0; i < rightOrder.length; i++) {
+        if (selectedStars[i] != rightOrder[i]) {
+          allMatch = false;
+          break;
+        }
+      }
+
+      if (allMatch) {
+        gameComplete = true;
+        setTimeout(openModal, 500);
+      } else {
+        setTimeout(function () {
+          selectedStars.length = 0;
+          updateStarDisplay();
+        }, 1000);
+      }
+    }
+  }
+
+  updateStarDisplay();
+}
+
+function updateStarDisplay() {
+  const counter = document.querySelector('#star-progress')
+  const svg = document.querySelector('#star-lines')
+  const btns = document.querySelectorAll('.star-btn')
+  
+  counter.textContent = `${selectedStars.length}/${rightOrder.length}`
+  
+  svg.innerHTML = ''
+  
+  selectedStars.forEach((starId, id) => {
+    if (id == 0) {
+      return;
+    }
+    
+    const curr = starPositions.find(s => s.id == starId)
+    const prev = starPositions.find(s => s.id == selectedStars[id - 1])
+    
+    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+    l.setAttribute('x1', `${prev.x}%`)
+    l.setAttribute('y1', `${prev.y}%`)
+    l.setAttribute('x2', `${curr.x}%`)
+    l.setAttribute('y2', `${curr.y}%`)
+    l.setAttribute('stroke', 'cyan')
+    l.setAttribute('stroke-width', '2')
+
+    if (gameComplete) {
+      l.classList.add('animate-pulse')
+    }
+    
+    svg.appendChild(l)
+  })
+  
+  btns.forEach(stBtn => {
+    const starId   = parseInt(stBtn.dataset.starId)
+    const starInfo = starPositions.find(s => s.id == starId)
+    const active   = selectedStars.includes(starId)
+    
+    stBtn.className = `star-btn absolute transform -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 hover:scale-125 ${
+      active
+        ? 'bg-cyan-400 shadow-cyan-400/50 shadow-lg'
+        : 'bg-yellow-200 hover:bg-yellow-300'
+    } ${gameComplete ? 'animate-pulse' : ''}`
+    
+    const size = starInfo.size + (active ? 4 : 0);
+    stBtn.style.width = `${size}px`
+    stBtn.style.height = `${size}px`
+    
+    const old = stBtn.querySelector('span');
+    if (old) {
+      old.remove()
+    }
+    
+    if (active) {
+      const label = '<span class="absolute -top-8 left-1/2 transform -translate-x-1/2 text-cyan-400 text-sm font-bold">' + (selectedStars.indexOf(starId) + 1) + '</span>'
+      stBtn.innerHTML += label
+    }
+  })
+}
+
+function clearStars() {
+  selectedStars = []
+  gameComplete = false
+  updateStarDisplay()
+}
+
+function checkDeviceType() {
+  let userAgent = navigator.userAgent.toLowerCase()
+  mobile = /android|phone|tablet|mobile/i.test(userAgent)
+}
+
+function setupEvents() {
+  const secretInput = document.querySelector('#secret-input')
+  const openBtn = document.querySelector('#open-secret')
+  const closeBtn = document.querySelector('#close-modal')
+  const numberButtons = document.querySelectorAll('.btn')
+  const deleteBtn = document.querySelector('#delete-btn')
+  const starButtons = document.querySelectorAll('.star-btn')
+  const resetBtn = document.querySelector('#reset-stars')
+  const modal = document.querySelector('#modal')
+
+  secretInput.addEventListener('input', onSecretInput)
+  openBtn.addEventListener('click', openModal)
+  closeBtn.addEventListener('click', closeModal)
+  deleteBtn.addEventListener('click', () => {
+    hexCode = hexCode.slice(0, -1)
+    updateHexDisplay()
+  })
+  resetBtn.addEventListener('click', clearStars)
+
+  numberButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const digit = e.target.dataset.value
+      hexCode = (hexCode + digit).replace(/\s+/g, '').match(/.{1,2}/g)?.join(' ') || ''
+      updateHexDisplay()
+      updateProgressBar()
+    })
+  })
+
+  starButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const starId = parseInt(e.target.dataset.starId)
+      onStarClick(starId)
+    })
+  })
+
+  modal.addEventListener('click', (e) => {
+    if (e.target == modal) {
+      closeModal();
+    }
+  })
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key == 'Escape' && modalOpen) {
+      closeModal();
+    }
+  })
+
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX
+    mouseY = e.clientY
+    updateElementPositions()
+  })
+
+  window.addEventListener('touchmove', (e) => {
+    if (!e.touches?.[0]) return
+    mouseX = e.touches[0].clientX
+    mouseY = e.touches[0].clientY
+    updateElementPositions()
+    e.preventDefault()
+  }, { passive: false })
+
+  window.addEventListener('deviceorientation', (e) => {
+    if (!mobile || !e.gamma || !e.beta) return
+    
+    let maxTilt = 15
+    let leftRight = Math.min(Math.max(e.gamma, -maxTilt), maxTilt) / maxTilt
+    let upDown = Math.min(Math.max(e.beta - 40, -maxTilt), maxTilt) / maxTilt
+    
+    mouseX = (leftRight + 1) / 2 * window.innerWidth
+    mouseY = (upDown + 1) / 2 * window.innerHeight
+    updateElementPositions()
+  })
+
+  window.addEventListener('resize', () => {
+    clearTimeout(window.resizeTimer)
+    window.resizeTimer = setTimeout(() => {
+      checkDeviceType()
+    }, 300)
+  })
+}
+
+makeBackgroundStars()
+setupEvents()
+updateElementPositions()
