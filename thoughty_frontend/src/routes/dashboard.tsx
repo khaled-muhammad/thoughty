@@ -17,17 +17,25 @@ import {
   faBolt, 
   faStar, 
   faAtom, 
-  faInfinity, 
-  faPlus,
+  faInfinity,
   faHeart,
   faShare,
-  faBookmark
+  faBookmark,
+  faDollarSign,
+  faVoteYea,
+  faLevelUpAlt,
+  faRobot,
+  faCopy,
+  faShieldAlt,
+  faCrown,
+  faUsers
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { usePodModal } from '../contexts/PodModalContext';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'react-toastify';
 
 // Mock data interfaces
 interface Pod {
@@ -61,6 +69,16 @@ interface UserStats {
   currentPoints: number;
 }
 
+interface Badge {
+  id: number;
+  name: string;
+  description: string;
+  unlocked: boolean;
+  requirements: string;
+  type: string;
+  icon: string;
+}
+
 // Utility: format timestamps into "x units ago"
 const formatTimeAgo = (dateString: string): string => {
   if (!dateString) return '';
@@ -86,13 +104,22 @@ const formatTimeAgo = (dateString: string): string => {
 };
 
 // Transform backend pod -> UI pod
-const transformPod = (data: any): Pod => ({
+const transformPod = (data: {
+  id: string | number;
+  title: string;
+  user: string | { username: string };
+  created_at?: string;
+  timestamp?: string;
+  content: string;
+  tags?: { name: string }[];
+  recent_votes?: number;
+}): Pod => ({
   id: data.id.toString(),
   title: data.title,
   author: typeof data.user === 'object' && data.user?.username ? data.user.username : `User ${data.user}`,
-  timeAgo: formatTimeAgo(data.created_at ?? data.timestamp),
+  timeAgo: formatTimeAgo(data.created_at ?? data.timestamp ?? ''),
   content: data.content,
-  tags: (data.tags || []).map((t: any) => `#${t.name}`),
+  tags: (data.tags || []).map((t) => `#${t.name}`),
   likes: data.recent_votes ?? 0,
   comments: 0,
   isLiked: false,
@@ -106,17 +133,19 @@ export default function Dashboard() {
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [pods, setPods] = useState<Pod[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [userStats] = useState<UserStats>({
-    pods: 24,
-    points: 1200,
-    badges: 8,
-    level: 7,
-    nextLevelPoints: 1500,
-    currentPoints: 1200
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [userStats, setUserStats] = useState<UserStats>({
+    pods: 0,
+    points: 0,
+    badges: 0,
+    level: 1,
+    nextLevelPoints: 1000,
+    currentPoints: 0
   });
   const [isLoading, setIsLoading] = useState(false);
   const { openModal } = usePodModal();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
   
   // Fetch pods whenever the active tab changes or auth status updates
   useEffect(() => {
@@ -137,7 +166,7 @@ export default function Dashboard() {
         }
 
         const res = await api.get(endpointMap[activeTab]);
-        const fetchedPods: Pod[] = (res.data || []).map((item: any) => transformPod(item));
+        const fetchedPods: Pod[] = (res.data || []).map((item: unknown) => transformPod(item as Parameters<typeof transformPod>[0]));
         setPods(fetchedPods);
       } catch (err) {
         console.error(err);
@@ -161,6 +190,48 @@ export default function Dashboard() {
     ];
     setActivities(mockActivities);
   }, [activeTab, isAuthenticated]);
+
+  // Fetch user stats and badges when authenticated
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      if (!isAuthenticated) return;
+      
+      try {
+        // Fetch user stats and badges in parallel
+        const [statsResponse, badgesResponse] = await Promise.all([
+          api.get('/gamification/stats/'),
+          api.get('/gamification/badges/')
+        ]);
+        
+        const { tokens, badges: badgeCount } = statsResponse.data;
+        
+        // Get user's pod count from existing profile/pods endpoint
+        const podsResponse = await api.get('/pods/mine/');
+        const podCount = podsResponse.data.length;
+        
+        // Calculate level and progress (simple example)
+        const level = Math.floor(tokens / 500) + 1;
+        const nextLevelPoints = level * 500;
+        const currentPoints = tokens;
+        
+        setUserStats({
+          pods: podCount,
+          points: tokens,
+          badges: badgeCount,
+          level,
+          nextLevelPoints,
+          currentPoints
+        });
+
+        setBadges(badgesResponse.data);
+      } catch (err) {
+        console.error('Error fetching user stats:', err);
+        // Keep default values if error
+      }
+    };
+
+    fetchUserStats();
+  }, [isAuthenticated]);
 
   // Event handlers
   const handleTabChange = (tab: 'trending' | 'new' | 'recommended') => {
@@ -202,21 +273,51 @@ export default function Dashboard() {
     );
   };
 
-  const handleSharePod = (podId: string) => {
-    // Simulate sharing functionality
-    navigator.clipboard.writeText(`${window.location.origin}/pod/${podId}`);
-    // You could add a toast notification here
-    console.log('Pod link copied to clipboard!');
+  const handleSharePod = async (podId: string) => {
+    try {
+      const podUrl = `${window.location.origin}/pods?highlight=${podId}`;
+      
+      // Try to use the Web Share API if available (mobile devices)
+      if (navigator.share) {
+        const pod = pods.find(p => p.id === podId);
+        await navigator.share({
+          title: pod?.title || 'Check out this Thought Pod',
+          text: pod?.content ? `${pod.content.substring(0, 100)}...` : 'Interesting thought pod on Thoughty',
+          url: podUrl,
+        });
+        toast.success('Pod shared successfully!');
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(podUrl);
+        toast.success('Pod link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing pod:', error);
+      // Fallback to clipboard if share fails
+      try {
+        const podUrl = `${window.location.origin}/pods?highlight=${podId}`;
+        await navigator.clipboard.writeText(podUrl);
+        toast.success('Pod link copied to clipboard!');
+      } catch {
+        toast.error('Failed to share pod. Please try again.');
+      }
+    }
+  };
+
+  const handleExplorePod = (podId: string) => {
+    // Navigate to the pods page with the specific pod highlighted
+    navigate(`/pods?highlight=${podId}`);
+    toast.info('Opening pod for exploration...');
   };
 
   const handleCreatePod = () => {
     openModal();
   };
 
-  const handleRoulette = () => {
-    // Implement roulette functionality
-    console.log('Starting thought roulette...');
-  };
+  // const handleRoulette = () => {
+  //   // Implement roulette functionality
+  //   console.log('Starting thought roulette...');
+  // };
 
   const handleLoadMore = () => {
     setIsLoading(true);
@@ -256,6 +357,53 @@ export default function Dashboard() {
   if (activeTab === 'recommended' && !isAuthenticated) {
     return <Navigate to="/auth" replace />;
   }
+
+  // Map badge names to FontAwesome icons
+  const getBadgeIcon = (badgeName: string) => {
+    const iconMap: { [key: string]: IconProp } = {
+      'First Pod': faPlusCircle,
+      'Idea Seller': faDollarSign,
+      'Voter': faVoteYea,
+      'Democratic Voice': faVoteYea,
+      'Idea Evolver': faLevelUpAlt,
+      'Growth Master': faTrophy,
+      'Mind Mentee': faRobot,
+      'Wisdom Seeker': faBrain,
+      'Brainstormer': faLightbulb,
+      'Creative Dynamo': faBolt,
+      'Idea Cloner': faCopy,
+      'Variation Master': faAtom,
+      'Battle Warrior': faShieldAlt,
+      'Champion': faCrown,
+      'Community Builder': faUsers,
+      'Thought Leader': faStar,
+      'Entrepreneur': faDollarSign,
+      'Idea Machine': faBrain,
+      'Roulette Explorer': faRandom,
+      'Platform Legend': faInfinity
+    };
+    return iconMap[badgeName] || faMedal;
+  };
+
+  // Map badge types to gradients
+  const getBadgeGradient = (badgeType: string, unlocked: boolean) => {
+    const gradientMap: { [key: string]: string } = {
+      'starter': 'from-indigo-400 to-purple-500',
+      'consistent': 'from-teal-400 to-emerald-500',
+      'explorer': 'from-blue-400 to-cyan-500',
+      'master': 'from-purple-400 to-pink-500',
+      'achievement': 'from-fuchsia-400 to-purple-500',
+      'dedication': 'from-violet-400 to-indigo-500',
+      'community': 'from-green-400 to-teal-500',
+      'legendary': 'from-rose-400 to-pink-500'
+    };
+    
+    if (!unlocked) {
+      return 'from-gray-600 to-gray-700';
+    }
+    
+    return gradientMap[badgeType] || 'from-yellow-400 to-amber-500';
+  };
 
     return (
     <div id="dashboard" className="page min-h-screen overflow-x-hidden">
@@ -377,17 +525,22 @@ export default function Dashboard() {
                             </button>
                   <button
                               onClick={() => handleSharePod(pod.id)}
-                              className="p-2 rounded-lg bg-dark/50 text-primary-light hover:bg-dark/70 transition-all text-sm"
+                              className="p-2 rounded-lg bg-dark/50 text-primary-light hover:bg-dark/70 transition-all text-sm hover:text-blue-400"
+                              title="Share this pod"
                             >
                               <FontAwesomeIcon icon={faShare} />
                             </button>
                           </div>
-                          <button className="bg-primary hover:bg-primary-light px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base">
+                          <button 
+                            onClick={() => handleExplorePod(pod.id)}
+                            className="bg-primary hover:bg-primary-light px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base hover:shadow-lg"
+                            title="Explore this pod in detail"
+                          >
                             <span>Explore</span>
                             <FontAwesomeIcon icon={faArrowRight} className="text-xs sm:text-sm" />
-                  </button>
-                </div>
-              </div>
+                          </button>
+                        </div>
+                      </div>
                   </div>
                   ))}
                 </div>
@@ -429,7 +582,7 @@ export default function Dashboard() {
         </div>
                 </div>
                 <div className="space-y-1 min-w-0">
-                  <h3 className="text-lg sm:text-xl font-bold truncate">ThoughtExplorer</h3>
+                  <h3 className="text-lg sm:text-xl font-bold truncate">{user?.username || 'ThoughtExplorer'}</h3>
                   <p className="text-primary-light text-sm">Level {userStats.level} MindPodder</p>
               </div>
             </div>
@@ -505,39 +658,23 @@ export default function Dashboard() {
               <div className="space-y-4">
                 <h3 className="font-bold text-base sm:text-lg">Your Badges</h3>
                 <div className="grid grid-cols-4 gap-3 sm:gap-4">
-                  {[
-                    { icon: faMedal, gradient: 'from-yellow-400 to-amber-500', glow: 'yellow-400', name: 'First Pod', description: 'Created your first thought pod' },
-                    { icon: faLightbulb, gradient: 'from-blue-400 to-cyan-500', glow: 'blue-400', name: 'Innovator', description: 'Shared groundbreaking ideas' },
-                    { icon: faBrain, gradient: 'from-purple-400 to-violet-600', glow: 'purple-400', name: 'Deep Thinker', description: 'Engaged in complex discussions' },
-                    { icon: faFire, gradient: 'from-green-400 to-emerald-500', glow: 'green-400', name: 'Trending', description: 'Your pod went viral' },
-                    { icon: faBolt, gradient: 'from-red-400 to-rose-500', glow: 'red-400', name: 'Quick Wit', description: 'Lightning-fast responses' },
-                    { icon: faStar, gradient: 'from-pink-400 to-fuchsia-500', glow: 'pink-400', name: 'Rising Star', description: 'Gaining popularity fast' },
-                    { icon: faAtom, gradient: 'from-indigo-400 to-blue-600', glow: 'indigo-400', name: 'Scientist', description: 'Evidence-based thinking' },
-                    { icon: faInfinity, gradient: 'from-teal-400 to-cyan-600', glow: 'teal-400', name: 'Philosopher', description: 'Explored infinite possibilities' }
-                  ].map((badge, index) => (
+                  {badges.slice(0, 8).map((badge) => (
                     <div
-                      key={index}
+                      key={badge.id}
                       className="group relative cursor-pointer"
                       title={`${badge.name}: ${badge.description}`}
                     >
                       {/* Badge Container */}
                       <div className={`
                         relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full 
-                        bg-gradient-to-br ${badge.gradient}
-                        shadow-lg shadow-${badge.glow}/30
-                        border-2 border-white/20
+                        bg-gradient-to-br ${getBadgeGradient(badge.type, badge.unlocked)}
+                        shadow-lg
+                        border-2 ${badge.unlocked ? 'border-white/20' : 'border-gray-500/20'}
                         transition-all duration-300 ease-out
                         group-hover:scale-110 
                         group-hover:shadow-xl 
-                        group-hover:shadow-${badge.glow}/50
-                        group-hover:border-white/40
                         flex items-center justify-center
-                        before:absolute before:inset-0 before:rounded-full
-                        before:bg-gradient-to-br before:${badge.gradient}
-                        before:opacity-0 before:blur-md
-                        before:transition-opacity before:duration-300
-                        group-hover:before:opacity-60
-                        animate-pulse-slow
+                        ${badge.unlocked ? 'animate-pulse-slow' : 'opacity-60'}
                       `}>
                         {/* Inner glow effect */}
                         <div className={`
@@ -548,17 +685,19 @@ export default function Dashboard() {
                         
                         {/* Icon */}
                         <FontAwesomeIcon 
-                          icon={badge.icon} 
-                          className="text-white text-sm sm:text-base lg:text-lg relative z-10 drop-shadow-lg group-hover:scale-110 transition-transform duration-300" 
+                          icon={getBadgeIcon(badge.name)} 
+                          className={`${badge.unlocked ? 'text-white' : 'text-gray-400'} text-sm sm:text-base lg:text-lg relative z-10 drop-shadow-lg group-hover:scale-110 transition-transform duration-300`} 
                         />
                         
-                        {/* Sparkle effect */}
-                        <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <div className="absolute top-1 sm:top-2 right-1 sm:right-2 w-0.5 h-0.5 sm:w-1 sm:h-1 bg-white rounded-full animate-ping" />
-                          <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 w-0.5 h-0.5 bg-white rounded-full animate-ping animation-delay-150" />
-                          <div className="absolute top-2 sm:top-4 left-1 sm:left-2 w-0.5 h-0.5 bg-white rounded-full animate-ping animation-delay-300" />
-              </div>
-            </div>
+                        {/* Sparkle effect for unlocked badges */}
+                        {badge.unlocked && (
+                          <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="absolute top-1 sm:top-2 right-1 sm:right-2 w-0.5 h-0.5 sm:w-1 sm:h-1 bg-white rounded-full animate-ping" />
+                            <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 w-0.5 h-0.5 bg-white rounded-full animate-ping animation-delay-150" />
+                            <div className="absolute top-2 sm:top-4 left-1 sm:left-2 w-0.5 h-0.5 bg-white rounded-full animate-ping animation-delay-300" />
+                          </div>
+                        )}
+                      </div>
 
                       {/* Tooltip - Hidden on mobile */}
                       <div className={`
@@ -572,15 +711,8 @@ export default function Dashboard() {
                       `}>
                         <div className="font-semibold text-white">{badge.name}</div>
                         <div className="text-gray-300 text-xs mt-1">{badge.description}</div>
-                </div>
-                      
-                      {/* Floating particles effect - Reduced on mobile */}
-                      <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                        <div className={`absolute top-0 left-1/2 w-0.5 h-0.5 sm:w-1 sm:h-1 bg-${badge.glow} rounded-full animate-float-up animation-delay-0`} />
-                        <div className={`absolute top-1/2 right-0 w-0.5 h-0.5 bg-${badge.glow} rounded-full animate-float-right animation-delay-200`} />
-                        <div className={`absolute bottom-0 left-1/4 w-0.5 h-0.5 bg-${badge.glow} rounded-full animate-float-up animation-delay-400`} />
-                </div>
-              </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
                 
@@ -588,12 +720,12 @@ export default function Dashboard() {
                 <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-dark/30 rounded-lg border border-input-br">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium">Badge Progress</span>
-                    <span className="text-xs text-primary-light">8/12 Collected</span>
+                    <span className="text-xs text-primary-light">{userStats.badges}/{badges.length} Collected</span>
                   </div>
                   <div className="w-full bg-dark/50 rounded-full h-2">
-                    <div className="bg-gradient-to-r from-primary via-secondary to-accent h-2 rounded-full transition-all duration-500" style={{width: "67%"}}></div>
+                    <div className="bg-gradient-to-r from-primary via-secondary to-accent h-2 rounded-full transition-all duration-500" style={{width: `${badges.length > 0 ? (userStats.badges / badges.length) * 100 : 0}%`}}></div>
                   </div>
-                  <p className="text-xs text-primary-light mt-2">4 more badges to unlock the next tier!</p>
+                  <p className="text-xs text-primary-light mt-2">{badges.length - userStats.badges} more badges to unlock!</p>
                 </div>
               </div>
 

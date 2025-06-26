@@ -22,6 +22,8 @@ import {
   faCity,
   faBriefcase
 } from '@fortawesome/free-solid-svg-icons';
+import api from '../services/api';
+import { toast } from 'react-toastify';
 
 // Types
 interface ThoughtPod {
@@ -54,124 +56,16 @@ interface Battle {
 
 type ScreenType = 'dashboard' | 'selectPod' | 'selectOpponent';
 
-// Sample data (will be replaced with API calls)
-const samplePods: ThoughtPod[] = [
-  {
-    id: '1',
-    name: 'Digital Nomadism',
-    description: 'Exploring the benefits and challenges of location-independent work and lifestyle in the digital age.',
-    icon: 'lightbulb',
-    tags: ['Lifestyle', 'Work', 'Technology'],
-    author: 'You',
-    createdAt: '2 days ago',
-    battleCount: 3
-  },
-  {
-    id: '2',
-    name: 'Consciousness Theory',
-    description: 'Examining different theories of consciousness and their implications for AI and human cognition.',
-    icon: 'brain',
-    tags: ['Philosophy', 'Science', 'AI'],
-    author: 'You',
-    createdAt: '1 week ago',
-    battleCount: 5
-  },
-  {
-    id: '3',
-    name: 'Future of Capitalism',
-    description: 'Analyzing potential evolutionary paths for capitalist systems in the face of technological disruption.',
-    icon: 'chart-line',
-    tags: ['Economics', 'Future', 'Society'],
-    author: 'You',
-    createdAt: '3 days ago',
-    battleCount: 2
-  }
-];
-
-const sampleOpponentPods: ThoughtPod[] = [
-  {
-    id: '4',
-    name: 'Stable Careers',
-    description: 'The value of traditional career paths and stable employment in an era of gig economies and rapid change.',
-    icon: 'home',
-    tags: ['Career', 'Stability', 'Society'],
-    author: 'ThoughtLeader',
-    createdAt: '1 week ago',
-    battleCount: 7,
-    winCount: 4,
-    lossCount: 2,
-    drawCount: 1
-  },
-  {
-    id: '5',
-    name: 'Urban Living',
-    description: 'Why cities continue to be hubs of innovation, culture, and economic opportunity despite their challenges.',
-    icon: 'city',
-    tags: ['Cities', 'Community', 'Innovation'],
-    author: 'CityThinker',
-    createdAt: '2 weeks ago',
-    battleCount: 12,
-    winCount: 8,
-    lossCount: 3,
-    drawCount: 1
-  },
-  {
-    id: '6',
-    name: 'Corporate Careers',
-    description: 'The evolving role of traditional corporate careers in personal development and societal contribution.',
-    icon: 'briefcase',
-    tags: ['Business', 'Career', 'Growth'],
-    author: 'CareerGuru',
-    createdAt: '5 days ago',
-    battleCount: 9,
-    winCount: 5,
-    lossCount: 3,
-    drawCount: 1
-  },
-  {
-    id: '7',
-    name: 'Community Roots',
-    description: 'The importance of deep community connections and local roots in personal fulfillment and societal health.',
-    icon: 'users',
-    tags: ['Community', 'Belonging', 'Society'],
-    author: 'SocialThinker',
-    createdAt: '1 week ago',
-    battleCount: 6,
-    winCount: 3,
-    lossCount: 2,
-    drawCount: 1
-  }
-];
-
-const sampleRecentBattles: Battle[] = [
-  {
-    id: '1',
-    podA: samplePods[0], // Digital Nomadism
-    podB: sampleOpponentPods[0], // Stable Careers
-    votesA: 24,
-    votesB: 13,
-    startedAt: '2 hours ago',
-    status: 'completed'
-  },
-  {
-    id: '2',
-    podA: samplePods[1], // Consciousness Theory
-    podB: sampleOpponentPods[1], // Urban Living
-    votesA: 42,
-    votesB: 46,
-    startedAt: '5 hours ago',
-    status: 'completed'
-  },
-  {
-    id: '3',
-    podA: samplePods[2], // Future of Capitalism
-    podB: sampleOpponentPods[2], // Corporate Careers
-    votesA: 37,
-    votesB: 29,
-    startedAt: '1 day ago',
-    status: 'completed'
-  }
-];
+// Icons for pods (fallback if backend doesn't provide)
+const ICON_MAPPING: { [key: string]: string } = {
+  'Technology': 'robot',
+  'Philosophy': 'brain',
+  'Economics': 'chart-line',
+  'Lifestyle': 'lightbulb',
+  'Business': 'briefcase',
+  'Community': 'users',
+  'default': 'lightbulb'
+};
 
 export default function Battles() {
   const navigate = useNavigate();
@@ -182,38 +76,100 @@ export default function Battles() {
   // Battle state - removed unused battle state variables
   const [selectedPod, setSelectedPod] = useState<ThoughtPod | null>(null);
   
-  // Data state with localStorage persistence
-  const [userPods] = useState<ThoughtPod[]>(samplePods);
-  const [opponentPods] = useState<ThoughtPod[]>(sampleOpponentPods);
-  
-  // Initialize battles from localStorage or use sample data
-  const [recentBattles, setRecentBattles] = useState<Battle[]>(() => {
-    try {
-      const savedBattles = localStorage.getItem('thoughty_battles');
-      if (savedBattles) {
-        return JSON.parse(savedBattles);
-      }
-      return sampleRecentBattles;
-    } catch (error) {
-      console.error('Error loading battles from localStorage:', error);
-      return sampleRecentBattles;
-    }
-  });
-
-  // Save battles to localStorage whenever recentBattles changes
-  useEffect(() => {
-    try {
-      localStorage.setItem('thoughty_battles', JSON.stringify(recentBattles));
-    } catch (error) {
-      console.error('Error saving battles to localStorage:', error);
-    }
-  }, [recentBattles]);
+  // Data state
+  const [userPods, setUserPods] = useState<ThoughtPod[]>([]);
+  const [opponentPods, setOpponentPods] = useState<ThoughtPod[]>([]);
+  const [recentBattles, setRecentBattles] = useState<Battle[]>([]);
+  const [loading, setLoading] = useState(true);
   
   // Search and filter state
   const [podSearchTerm, setPodSearchTerm] = useState('');
   const [opponentSearchTerm, setOpponentSearchTerm] = useState('');
   const [topicFilter, setTopicFilter] = useState('All Topics');
   const [sortFilter, setSortFilter] = useState('Sort By');
+
+  // Load data from API
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch user's pods
+        const userPodsRes = await api.get('/pods/mine/');
+        const userPodsData = userPodsRes.data || [];
+        
+        // Fetch all public pods for opponents
+        const allPodsRes = await api.get('/pods/');
+        const allPodsData = allPodsRes.data || [];
+        
+        // Fetch recent battles
+        const battlesRes = await api.get('/battles/');
+        const battlesData = battlesRes.data || [];
+
+        // Transform pods data
+        const transformedUserPods = userPodsData.map((pod: any) => ({
+          id: pod.id.toString(),
+          name: pod.title,
+          description: pod.content.slice(0, 150) + (pod.content.length > 150 ? '...' : ''),
+          icon: getIconFromTags(pod.tags),
+          tags: (pod.tags || []).map((tag: any) => typeof tag === 'string' ? tag : tag.name),
+          author: 'You',
+          createdAt: formatDate(pod.created_at),
+          battleCount: 0 // TODO: add battle count from backend
+        }));
+
+        const transformedOpponentPods = allPodsData
+          .filter((pod: any) => pod.is_public && !userPodsData.find((up: any) => up.id === pod.id))
+          .map((pod: any) => ({
+            id: pod.id.toString(),
+            name: pod.title,
+            description: pod.content.slice(0, 150) + (pod.content.length > 150 ? '...' : ''),
+            icon: getIconFromTags(pod.tags),
+            tags: (pod.tags || []).map((tag: any) => typeof tag === 'string' ? tag : tag.name),
+            author: pod.user?.username || 'Anonymous',
+            createdAt: formatDate(pod.created_at),
+            battleCount: 0,
+            winCount: 0,
+            lossCount: 0,
+            drawCount: 0
+          }));
+
+        // Transform battles data - need to find pod details from the pods we already fetched
+        const allPods = [...userPodsData, ...allPodsData];
+        const transformedBattles = battlesData
+          .map((battle: any) => {
+            const podA = allPods.find(p => p.id === battle.pod_a);
+            const podB = allPods.find(p => p.id === battle.pod_b);
+            
+            // Skip battles where we can't find the pods
+            if (!podA || !podB) return null;
+            
+            return {
+              id: battle.id.toString(),
+              podA: transformPodForBattle(podA),
+              podB: transformPodForBattle(podB),
+              votesA: 0, // TODO: fetch vote counts
+              votesB: 0,
+              startedAt: formatDate(battle.created_at),
+              status: battle.winner ? 'completed' as const : 'active' as const
+            };
+          })
+          .filter(Boolean); // Remove null entries
+
+        setUserPods(transformedUserPods);
+        setOpponentPods(transformedOpponentPods);
+        setRecentBattles(transformedBattles);
+        
+      } catch (error) {
+        console.error('Failed to load battles data:', error);
+        toast.error('Failed to load battles data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   // Navigation functions
   const showScreen = useCallback((screen: ScreenType) => {
@@ -239,10 +195,25 @@ export default function Battles() {
     showScreen('selectOpponent');
   }, [showScreen]);
 
-  const selectOpponent = useCallback((opponent: ThoughtPod) => {
-    if (selectedPod) {
-      const newBattle: Battle = {
-        id: Date.now().toString(),
+  const selectOpponent = useCallback(async (opponent: ThoughtPod) => {
+    if (!selectedPod) return;
+
+    try {
+      // Create battle via API
+      const battlePayload = {
+        pod_a: parseInt(selectedPod.id),
+        pod_b: parseInt(opponent.id),
+        vote_threshold: 3
+      };
+
+      const response = await api.post('/battles/', battlePayload);
+      const newBattle = response.data;
+
+      toast.success('Battle created successfully!');
+
+      // Add to local state
+      const battleForUI: Battle = {
+        id: newBattle.id.toString(),
         podA: selectedPod,
         podB: opponent,
         votesA: 0,
@@ -251,11 +222,13 @@ export default function Battles() {
         status: 'active'
       };
       
-      // Add the new battle to recent battles
-      setRecentBattles(prev => [newBattle, ...prev.slice(0, 4)]);
+      setRecentBattles(prev => [battleForUI, ...prev.slice(0, 4)]);
       
       // Navigate to the battle view route
       navigate(`/battles/${newBattle.id}`);
+    } catch (error) {
+      console.error('Failed to create battle:', error);
+      toast.error('Failed to create battle');
     }
   }, [selectedPod, navigate]);
 
@@ -341,8 +314,55 @@ export default function Battles() {
     }
   });
 
+  // Helper functions
+  const getIconFromTags = (tags: string[]) => {
+    if (!tags || tags.length === 0) return 'lightbulb';
+    const firstTag = tags[0];
+    return ICON_MAPPING[firstTag] || ICON_MAPPING.default;
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'Unknown';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return '1 day ago';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
+    return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) > 1 ? 's' : ''} ago`;
+  };
+
+  const transformPodForBattle = (pod: any): ThoughtPod => ({
+    id: pod.id.toString(),
+    name: pod.title,
+    description: pod.content.slice(0, 150) + (pod.content.length > 150 ? '...' : ''),
+    icon: getIconFromTags(pod.tags),
+    tags: (pod.tags || []).map((tag: any) => typeof tag === 'string' ? tag : tag.name),
+    author: pod.user?.username || 'Anonymous',
+    createdAt: formatDate(pod.created_at),
+    battleCount: 0
+  });
+
+  if (loading) {
     return (
-  <div id="battle" className="page pt-[3rem]">
+      <div id="battle" className="page pt-[3rem]">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading battles...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div id="battle" className="page pt-[3rem]">
       {/* Dashboard Screen */}
       {currentScreen === 'dashboard' && (
         <div className="container mx-auto px-4 py-8">

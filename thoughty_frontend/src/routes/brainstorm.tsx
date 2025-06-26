@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import api from '../services/api';
+import { toast } from 'react-toastify';
 import '../styles/brainstorm.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -296,7 +298,7 @@ export default function Brainstorm() {
   }, [currentPromptType, currentTheme]);
 
   // Spin wheel
-  const spinWheel = useCallback(() => {
+  const spinWheel = useCallback(async () => {
     if (isSpinning) return;
 
     setIsSpinning(true);
@@ -318,13 +320,27 @@ export default function Brainstorm() {
 
     canvas.style.transform = `rotate(${-rotation}rad)`;
 
+    // Fetch prompt from backend roulette endpoint
+    let promptText = '';
+    let promptType: PromptType = currentPromptType;
+    try {
+      const res = await api.post('/brainstorm/roulette/spin/');
+      if (res.data && res.data.text) {
+        promptText = res.data.text;
+        promptType = (res.data.type || currentPromptType) as PromptType;
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to reach Idea Roulette – using local fallback');
+      const prompts = PROMPT_DATABASE[currentPromptType];
+      promptText = prompts[Math.floor(Math.random() * prompts.length)];
+    }
+
+    let themedPrompt = applyTheme(promptText, currentTheme);
+    themedPrompt = applyAudienceAndTone(themedPrompt, audience, tone);
+
     setTimeout(() => {
       setIsSpinning(false);
-      const prompts = PROMPT_DATABASE[currentPromptType];
-      const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-      let themedPrompt = applyTheme(randomPrompt, currentTheme);
-      themedPrompt = applyAudienceAndTone(themedPrompt, audience, tone);
-
       setCurrentPrompt(themedPrompt);
       setShowResult(true);
       addToHistory(themedPrompt);
@@ -347,23 +363,38 @@ export default function Brainstorm() {
   }, [currentPrompt, currentPromptType, currentTheme, audience, tone, applyTheme, applyAudienceAndTone, addToHistory]);
 
   // Save prompt
-  const savePrompt = useCallback(() => {
+  const savePrompt = useCallback(async () => {
     if (!currentPrompt) return;
 
-    const prompt: SavedPrompt = {
-      text: currentPrompt,
-      type: currentPromptType,
-      theme: currentTheme,
-      createdAt: new Date().toISOString()
-    };
+    const title = currentPrompt.slice(0, 60) + (currentPrompt.length > 60 ? '…' : '');
 
-    setSavedPrompts(prev => {
-      const updated = [prompt, ...prev];
-      localStorage.setItem('savedPrompts', JSON.stringify(updated));
-      return updated;
-    });
+    try {
+      await api.post('/pods/', {
+        title,
+        content: currentPrompt,
+        stage: 'idea', // backend stage value for seed
+        is_public: false,
+        tags: [],
+      });
 
-    alert('Prompt saved to your Pods!');
+      toast.success('Prompt saved as a new Pod!');
+
+      // Optionally cache in local saved list as well
+      const prompt: SavedPrompt = {
+        text: currentPrompt,
+        type: currentPromptType,
+        theme: currentTheme,
+        createdAt: new Date().toISOString(),
+      };
+      setSavedPrompts(prev => {
+        const updated = [prompt, ...prev];
+        localStorage.setItem('savedPrompts', JSON.stringify(updated));
+        return updated;
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to create pod');
+    }
   }, [currentPrompt, currentPromptType, currentTheme]);
 
   // Copy to clipboard
@@ -532,12 +563,6 @@ export default function Brainstorm() {
               className="bg-primary hover:bg-primary-light px-4 py-2 rounded-lg flex items-center"
             >
               <FontAwesomeIcon icon={faHistory} className="mr-2" /> History
-            </button>
-            <button 
-              onClick={() => setShowSettingsModal(true)}
-              className="bg-accent hover:bg-primary-light px-4 py-2 rounded-lg flex items-center"
-            >
-              <FontAwesomeIcon icon={faCog} className="mr-2" /> Settings
             </button>
           </div>
         </header>
@@ -743,90 +768,6 @@ export default function Brainstorm() {
             >
               <FontAwesomeIcon icon={faTrash} className="mr-2" /> Clear History
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Settings Modal */}
-      {showSettingsModal && (
-        <div 
-          className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center modal-backdrop ${settingsModalClosing ? 'closing' : ''}`}
-          onClick={(e) => handleBackdropClick(e, closeSettingsModal)}
-        >
-          <div className={`bg-dark rounded-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto shadow-2xl modal-content ${settingsModalClosing ? 'closing' : ''}`}>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">
-                <FontAwesomeIcon icon={faCog} className="mr-2" /> Settings
-            </h2>
-              <button 
-                onClick={closeSettingsModal}
-                className="text-gray-400 hover:text-light transition-colors duration-200 p-1 rounded-full hover:bg-gray-700"
-              >
-                <FontAwesomeIcon icon={faTimes} className="text-xl" />
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-semibold mb-2">Cloud Sync</h3>
-              <p className="text-sm text-gray-400 mb-2">Save your prompts to the cloud (requires login)</p>
-                <button 
-                  onClick={() => alert('Cloud sync would connect to API in production')}
-                  className="w-full bg-primary hover:bg-primary-light p-2 rounded-lg transition-colors duration-200"
-                >
-                  <FontAwesomeIcon icon={faCloud} className="mr-2" /> Enable Cloud Sync
-              </button>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-2">Export/Import</h3>
-              <div className="grid grid-cols-2 gap-2">
-                  <button 
-                    onClick={exportData}
-                    className="bg-secondary hover:bg-secondary/90 p-2 rounded-lg transition-colors duration-200"
-                  >
-                    <FontAwesomeIcon icon={faFileExport} className="mr-2" /> Export
-                </button>
-                  <label className="bg-accent hover:bg-accent/90 p-2 rounded-lg cursor-pointer text-center transition-colors duration-200">
-                    <FontAwesomeIcon icon={faFileImport} className="mr-2" /> Import
-                    <input 
-                      type="file" 
-                      accept=".json" 
-                      onChange={importData}
-                      className="hidden" 
-                    />
-                  </label>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-2">Wheel Customization</h3>
-              <div className="flex items-center mb-2">
-                <label className="mr-2">Segments:</label>
-                  <input 
-                    type="range" 
-                    min="4" 
-                    max="12" 
-                    value={segments}
-                    onChange={(e) => setSegments(parseInt(e.target.value))}
-                    className="w-full" 
-                  />
-                  <span className="ml-2 w-8 text-center">{segments}</span>
-              </div>
-              <div className="flex items-center">
-                <label className="mr-2">Spin Duration:</label>
-                  <input 
-                    type="range" 
-                    min="3" 
-                    max="10" 
-                    value={duration}
-                    onChange={(e) => setDuration(parseInt(e.target.value))}
-                    className="w-full" 
-                  />
-                  <span className="ml-2 w-8 text-center">{duration}</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}

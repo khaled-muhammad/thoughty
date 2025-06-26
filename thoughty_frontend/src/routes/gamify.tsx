@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import '../styles/gamify.css';
+import api from '../services/api';
 
 // TypeScript interfaces
 interface Badge {
@@ -20,14 +21,18 @@ interface LeaderboardUser {
   rank: number;
 }
 
+interface UserStats {
+  tokens: number;
+  badges: number;
+  rank: number;
+}
+
 // Badge types with corresponding colors
 const badgeTypes = {
   starter: { gradient: "from-indigo-500 to-purple-500", glow: "glow-indigo" },
   consistent: { gradient: "from-teal-500 to-emerald-500", glow: "glow-teal" },
   explorer: { gradient: "from-blue-500 to-cyan-500", glow: "glow" },
   master: { gradient: "from-purple-500 to-pink-500", glow: "glow-accent" },
-  routine: { gradient: "from-amber-500 to-yellow-500", glow: "glow-amber" },
-  streak: { gradient: "from-orange-500 to-red-500", glow: "glow-accent" },
   achievement: { gradient: "from-fuchsia-500 to-purple-500", glow: "glow" },
   dedication: { gradient: "from-violet-500 to-indigo-500", glow: "glow-indigo" },
   community: { gradient: "from-green-500 to-teal-500", glow: "glow-secondary" },
@@ -41,158 +46,36 @@ export default function Gamify() {
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [userTokens] = useState(1250);
+  const [userStats, setUserStats] = useState<UserStats>({ tokens: 0, badges: 0, rank: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data initialization
+  // Fetch data from API
   useEffect(() => {
-    const initializeMockData = () => {
-      // Mock badges data
-      const mockBadges: Badge[] = [
-        {
-          id: 1,
-          name: "Starter",
-          description: "Completed your first session",
-          unlocked: true,
-          requirements: "Complete 1 meditation session",
-          icon: "M12 6v6m0 0v6m0-6h6m-6 0H6",
-          type: "starter",
-          progress: 100,
-        },
-        {
-          id: 2,
-          name: "Consistent",
-          description: "3 days in a row",
-          unlocked: true,
-          requirements: "Meditate for 3 consecutive days",
-          icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
-          type: "consistent",
-          progress: 100,
-        },
-        {
-          id: 3,
-          name: "Explorer",
-          description: "Tried all categories",
-          unlocked: true,
-          requirements: "Try at least 1 session from each category",
-          icon: "M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9",
-          type: "explorer",
-          progress: 100,
-        },
-        {
-          id: 4,
-          name: "Zen Master",
-          description: "30 minutes straight",
-          unlocked: false,
-          requirements: "Complete a 30-minute meditation session",
-          icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z",
-          type: "master",
-          progress: 65,
-        },
-        {
-          id: 5,
-          name: "Early Bird",
-          description: "Morning routine",
-          unlocked: true,
-          requirements: "Complete 5 morning sessions before 8 AM",
-          icon: "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z",
-          type: "routine",
-          progress: 100,
-        },
-        {
-          id: 6,
-          name: "Night Owl",
-          description: "Evening routine",
-          unlocked: true,
-          requirements: "Complete 5 evening sessions after 8 PM",
-          icon: "M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z",
-          type: "routine",
-          progress: 100,
-          customGradient: "from-red-500 to-pink-500",
-        },
-        {
-          id: 7,
-          name: "Streak",
-          description: "7 day streak",
-          unlocked: false,
-          requirements: "Meditate for 7 consecutive days",
-          icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6",
-          type: "streak",
-          progress: 42,
-        },
-        {
-          id: 8,
-          name: "Centurion",
-          description: "100 sessions",
-          unlocked: false,
-          requirements: "Complete 100 meditation sessions",
-          icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
-          type: "achievement",
-          progress: 28,
-        },
-        {
-          id: 9,
-          name: "Dedicated",
-          description: "50 hours total",
-          unlocked: false,
-          requirements: "Reach 50 hours of total meditation time",
-          icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
-          type: "dedication",
-          progress: 15,
-        },
-        {
-          id: 10,
-          name: "All-Rounder",
-          description: "All categories mastered",
-          unlocked: false,
-          requirements: "Complete 10 sessions in each category",
-          icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10",
-          type: "achievement",
-          progress: 5,
-        },
-        {
-          id: 11,
-          name: "Community",
-          description: "Shared with friends",
-          unlocked: false,
-          requirements: "Invite 3 friends to join Mind Mentor",
-          icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
-          type: "community",
-          progress: 33,
-        },
-        {
-          id: 12,
-          name: "Legend",
-          description: "All badges unlocked",
-          unlocked: false,
-          requirements: "Earn all other badges in the collection",
-          icon: "M12 15l8-8m0 0h-8m8 0v8m-8-8l-8-8m8 8H4m8 8v8",
-          type: "legendary",
-          progress: 41,
-        },
-      ];
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch all data in parallel
+        const [badgesResponse, leaderboardResponse, statsResponse] = await Promise.all([
+          api.get('/gamification/badges/'),
+          api.get('/gamification/leaderboard/'),
+          api.get('/gamification/stats/')
+        ]);
 
-      // Mock leaderboard data
-      const mockLeaderboard: LeaderboardUser[] = [
-        { username: "MeditationMaster", tokens: 3250, rank: 1 },
-        { username: "ZenGuru", tokens: 2875, rank: 2 },
-        { username: "MindfulExplorer", tokens: 2650, rank: 3 },
-        { username: "SerenitySeeker", tokens: 2400, rank: 4 },
-        { username: "PeacefulWarrior", tokens: 2250, rank: 5 },
-        { username: "CalmSoul", tokens: 2100, rank: 6 },
-        { username: "TranquilMind", tokens: 1950, rank: 7 },
-        { username: "You", tokens: 1250, rank: 8 },
-        { username: "Beginner123", tokens: 950, rank: 9 },
-        { username: "Newbie", tokens: 500, rank: 10 },
-      ];
-
-      setBadges(mockBadges);
-      setLeaderboard(mockLeaderboard);
-      setIsLoading(false);
+        setBadges(badgesResponse.data);
+        setLeaderboard(leaderboardResponse.data);
+        setUserStats(statsResponse.data);
+      } catch (err) {
+        console.error('Error fetching gamification data:', err);
+        setError('Failed to load gamification data');
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    // Simulate API loading delay
-    setTimeout(initializeMockData, 500);
+    fetchData();
   }, []);
 
   // Event handlers
@@ -238,6 +121,29 @@ export default function Gamify() {
     );
   }
 
+  // Error state
+  if (error) {
+    return (
+      <div id="gamify" className="page">
+        <main className="pt-[5rem]">
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex justify-center items-center min-h-[400px]">
+              <div className="text-center">
+                <p className="text-red-400 text-lg mb-4">{error}</p>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="bg-primary hover:bg-primary-light px-6 py-3 rounded-lg transition-all"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div id="gamify" className="page">
       <main className="pt-[5rem]">
@@ -268,7 +174,7 @@ export default function Gamify() {
                 <div>
                   <p className="text-sm text-gray-300">Total Tokens</p>
                   <p className="text-3xl font-bold">
-                    {userTokens.toLocaleString()}
+                    {userStats.tokens.toLocaleString()}
                   </p>
                   <div className="flex items-center mt-1">
                     <div className="progress-bar w-3/4"></div>
@@ -378,7 +284,7 @@ export default function Gamify() {
 
             <div className="space-y-3">
               {leaderboard.map((user) => {
-                const isCurrentUser = user.username === "You";
+                const isCurrentUser = user.rank === userStats.rank;
                 let rankClass = "";
                 let rankColor = "";
 
@@ -407,7 +313,7 @@ export default function Gamify() {
                         {user.rank === 1 ? "🥇" : user.rank === 2 ? "🥈" : user.rank === 3 ? "🥉" : user.rank}
                       </div>
                       <p className={isCurrentUser ? "font-bold text-primary-light" : ""}>
-                        {user.username}
+                        {isCurrentUser ? "You" : user.username}
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -447,6 +353,7 @@ export default function Gamify() {
         </div>
 
         {/* Badge Modal */}
+
         {isModalOpen && selectedBadge && (
           <div
             className={`fixed inset-0 flex items-center justify-center z-50 transition-all duration-300 ease-out ${
@@ -540,72 +447,92 @@ export default function Gamify() {
                 </div>
                 
                 {/* Animated title */}
-                <h3 className={`text-xl font-bold mb-2 transition-all duration-400 ease-out ${
-                  selectedBadge.unlocked
-                    ? `text-transparent bg-clip-text bg-gradient-to-r ${
-                        selectedBadge.customGradient || badgeTypes[selectedBadge.type].gradient
-                      }`
-                    : "text-gray-300"
-                } ${isModalOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}>
+                <h3 className={`text-2xl font-bold mb-2 transition-all duration-300 delay-100 ${
+                  isModalOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                } ${selectedBadge.unlocked ? 'text-white' : 'text-gray-300'}`}>
                   {selectedBadge.name}
                 </h3>
                 
                 {/* Animated description */}
-                <p className={`text-center mb-4 transition-all duration-500 ease-out ${
-                  selectedBadge.unlocked ? "text-primary-light" : "text-gray-400"
-                } ${isModalOpen ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'}`}>
+                <p className={`text-gray-300 text-center mb-4 transition-all duration-300 delay-200 ${
+                  isModalOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`}>
                   {selectedBadge.description}
                 </p>
                 
-                {/* Animated requirements section */}
-                <div className={`w-full bg-dark rounded-lg p-4 border border-gray-700 transition-all duration-600 ease-out ${
-                  isModalOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-                } hover:border-primary/30`}>
-                  <p className={`text-sm font-medium mb-1 transition-colors duration-200 ${
-                    selectedBadge.unlocked ? "text-teal-300" : "text-gray-300"
-                  }`}>
-                    Requirements:
-                  </p>
-                  <p className={`text-sm transition-colors duration-200 ${
-                    selectedBadge.unlocked ? "text-gray-200" : "text-gray-400"
-                  }`}>
-                    {selectedBadge.requirements}
-                  </p>
-                  {selectedBadge.unlocked ? (
-                    <p className="mt-2 text-sm text-green-400 font-medium transition-all duration-300 animate-fade-in">
-                      ✓ You have earned this badge!
-                    </p>
-                  ) : (
-                    <>
-                      <p className="mt-2 text-sm text-yellow-400 font-medium transition-all duration-300">
-                        Keep going to unlock this badge!
-                      </p>
-                      <div className={`mt-3 transition-all duration-700 ease-out ${
-                        isModalOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
-                      }`}>
-                        <div className="flex justify-between text-xs text-gray-400 mb-1">
-                          <span>Progress</span>
-                          <span className="transition-all duration-300">{selectedBadge.progress}%</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-                          <div 
-                            className={`bg-gradient-to-r ${badgeTypes[selectedBadge.type].gradient} h-2 rounded-full transition-all duration-1000 ease-out transform ${
-                              isModalOpen ? 'translate-x-0' : '-translate-x-full'
-                            }`} 
-                            style={{ 
-                              width: `${selectedBadge.progress}%`,
-                              transitionDelay: isModalOpen ? '0.3s' : '0s'
-                            }}
-              ></div>
-                        </div>
+                {/* Requirements section with enhanced styling */}
+                <div className={`w-full bg-dark/30 rounded-lg p-4 border border-gray-700 transition-all duration-300 delay-300 ${
+                  isModalOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`}>
+                  <h4 className="text-sm font-semibold text-primary-light mb-2 flex items-center">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      className="h-4 w-4 mr-2" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth="2" 
+                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" 
+                      />
+                    </svg>
+                    Requirements
+                  </h4>
+                  <p className="text-sm text-gray-400">{selectedBadge.requirements}</p>
+                  
+                  {/* Progress bar for locked badges */}
+                  {!selectedBadge.unlocked && (
+                    <div className="mt-3">
+                      <div className="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Progress</span>
+                        <span>{selectedBadge.progress}%</span>
                       </div>
-                    </>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div 
+                          className={`bg-gradient-to-r ${badgeTypes[selectedBadge.type]?.gradient || badgeTypes.starter.gradient} h-2 rounded-full transition-all duration-500`} 
+                          style={{ width: `${selectedBadge.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
                   )}
+                  
+                  {/* Achievement status */}
+                  <div className={`mt-3 flex items-center ${selectedBadge.unlocked ? 'text-green-400' : 'text-gray-400'}`}>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      className="h-4 w-4 mr-2" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      {selectedBadge.unlocked ? (
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth="2" 
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
+                        />
+                      ) : (
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth="2" 
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+                        />
+                      )}
+                    </svg>
+                    <span className="text-sm font-medium">
+                      {selectedBadge.unlocked ? 'Unlocked!' : 'In Progress'}
+                    </span>
+                  </div>
                 </div>
-              </div>
             </div>
           </div>
-        )}
+          </div>
+          )}
       </main>
     </div>
   );

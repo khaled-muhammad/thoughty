@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { type Pod, type PodStage, type Comment, type TimelineStatus, STAGES } from '../types/pods';
 import { usePodModal } from '../contexts/PodModalContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,6 +7,7 @@ import api from '../services/api';
 
 export function usePods() {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [pods, setPods] = useState<Pod[]>([]);
   const [selectedPod, setSelectedPod] = useState<Pod | null>(null);
@@ -130,7 +132,7 @@ export function usePods() {
   // Register callback for global pod creation
   useEffect(() => {
     setOnPodCreated((newPod: Pod) => {
-      if (!newPod) return; // Runtime safeguard – should never hit.
+      if (!newPod) return;
 
       console.log('New pod created:', newPod);
 
@@ -186,7 +188,11 @@ export function usePods() {
   const closePodDetail = useCallback(() => {
     setIsDetailModalOpen(false);
     setSelectedPod(null);
-  }, []);
+    // Clear the highlight parameter when closing
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete('highlight');
+    setSearchParams(newSearchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const handleStageChange = useCallback((stage: PodStage) => {
     setCurrentStage(stage);
@@ -346,6 +352,34 @@ export function usePods() {
 
     fetchUserPods();
   }, [user]);
+
+  // Check for highlight parameter and auto-open pod
+  useEffect(() => {
+    const highlightId = searchParams.get('highlight');
+    if (highlightId && pods.length > 0) {
+      const podToHighlight = pods.find(pod => pod.id.toString() === highlightId);
+      if (podToHighlight && !selectedPod) {
+        openPodDetail(podToHighlight);
+      } else if (!podToHighlight && !selectedPod) {
+        // If the pod is not in user's own pods, fetch it from the API
+        const fetchSpecificPod = async () => {
+          try {
+            const response = await api.get(`/pods/${highlightId}/`);
+            const backendPod: BackendPod = response.data;
+            const transformedPod = transformBackendPod(backendPod);
+            openPodDetail(transformedPod);
+          } catch (error) {
+            console.error('Failed to fetch highlighted pod:', error);
+            // Clear the invalid highlight parameter
+            const newSearchParams = new URLSearchParams(searchParams);
+            newSearchParams.delete('highlight');
+            setSearchParams(newSearchParams, { replace: true });
+          }
+        };
+        fetchSpecificPod();
+      }
+    }
+  }, [searchParams, pods, selectedPod, openPodDetail, setSearchParams]);
 
   return {
     // State

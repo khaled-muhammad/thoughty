@@ -13,6 +13,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons';
 import '../styles/mentor.css';
+import api from '../services/api';
+import { toast } from 'react-toastify';
 
 // TypeScript interfaces
 interface CategoryData {
@@ -52,94 +54,17 @@ interface FilterState {
 }
 
 export default function Mentor() {
-  // State management
-  const [categories] = useState<CategoryData[]>([
-    { name: 'Society', percentage: 35 },
-    { name: 'Technology', percentage: 28 },
-    { name: 'Emotions', percentage: 22 },
-    { name: 'Creativity', percentage: 15 },
-  ]);
-
-  const [tones] = useState<ToneData[]>([
+  // --- State ---
+  const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [tones] = useState<ToneData[]>([ // placeholder until backend adds tone data
     { name: 'Optimistic', percentage: 45 },
     { name: 'Philosophical', percentage: 30 },
     { name: 'Analytical', percentage: 15 },
     { name: 'Critical', percentage: 10 },
   ]);
 
-  const [insights, setInsights] = useState<Insight[]>([
-    {
-      id: 1,
-      category: 'creativity',
-      tone: 'optimistic',
-      title: 'Idea Depth',
-      description: 'Your ideas show great breadth but could benefit from deeper exploration. Try the "5 Whys" technique to dig deeper into concepts.',
-      isFavorite: false,
-      isNew: true,
-      isDismissed: false
-    },
-    {
-      id: 2,
-      category: 'optimistic',
-      tone: 'optimistic',
-      title: 'Style Tip',
-      description: 'Your optimistic tone resonates well with readers. Consider pairing it with more concrete examples to increase impact.',
-      isFavorite: true,
-      isNew: false,
-      isDismissed: false
-    },
-    {
-      id: 3,
-      category: 'technology',
-      tone: 'analytical',
-      title: 'Tech Focus',
-      description: 'Your tech-related ideas often connect with societal impacts. This interdisciplinary approach could be your unique angle.',
-      isFavorite: false,
-      isNew: true,
-      isDismissed: false
-    },
-    {
-      id: 4,
-      category: 'society',
-      tone: 'philosophical',
-      title: 'Social Patterns',
-      description: 'You frequently notice patterns in social behavior. Try documenting these observations systematically to identify larger trends.',
-      isFavorite: false,
-      isNew: false,
-      isDismissed: false
-    }
-  ]);
-
-  const [tipPrompts, setTipPrompts] = useState<TipPrompt[]>([
-    {
-      id: 1,
-      category: 'Society',
-      title: 'Community Connection',
-      description: 'Write about a local issue you care about, then brainstorm three small actions you could take to make a difference.',
-      isFavorite: false
-    },
-    {
-      id: 2,
-      category: 'Philosophical',
-      title: 'Deep Question',
-      description: 'Reflect on this: "If you could instill one value in every child, what would it be and why?" Explore both personal and societal impacts.',
-      isFavorite: false
-    },
-    {
-      id: 3,
-      category: 'Creativity',
-      title: 'Idea Combination',
-      description: 'Take two unrelated ideas from your recent thoughts and force a connection between them. What new concept emerges?',
-      isFavorite: false
-    },
-    {
-      id: 4,
-      category: 'Emotions',
-      title: 'Emotional Mapping',
-      description: 'Track your emotional responses throughout a day. What patterns emerge? How do they influence your creative output?',
-      isFavorite: false
-    }
-  ]);
+  const [insights, setInsights] = useState<Insight[]>([]);
+  const [tipPrompts, setTipPrompts] = useState<TipPrompt[]>([]);
 
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -150,6 +75,63 @@ export default function Mentor() {
     new: true
   });
   const [filteredInsights, setFilteredInsights] = useState<Insight[]>(insights);
+
+  /* -------------------------------------------------
+   * Fetch profile + insights + suggestions
+   * ------------------------------------------------*/
+
+  useEffect(() => {
+    const fetchMentorData = async () => {
+      try {
+        const profileRes = await api.get('/mentor/profile/');
+        const { profile, insights: backendInsights } = profileRes.data;
+
+        // --------------------
+        // Categories (dominant tags)
+        // --------------------
+        if (profile?.dominant_tags?.length) {
+          const tags = profile.dominant_tags as { id: number; name: string }[];
+          const percentage = Math.round(100 / tags.length);
+          setCategories(tags.map(tag => ({ name: tag.name, percentage })));
+        }
+
+        // --------------------
+        // Insights
+        // --------------------
+        if (Array.isArray(backendInsights)) {
+          const mapped: Insight[] = backendInsights.map((insight: any) => ({
+            id: insight.id,
+            category: insight.type, // Using insight type as category label
+            tone: 'neutral',
+            title: insight.type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            description: insight.text,
+            isFavorite: false,
+            isNew: true,
+            isDismissed: false,
+          }));
+          setInsights(mapped);
+        }
+
+        // Suggestions (e.g., books)
+        const suggestionsRes = await api.get('/mentor/suggestions/');
+        const books = suggestionsRes.data?.books ?? [];
+        setTipPrompts(
+          books.map((book: any, idx: number) => ({
+            id: idx + 1,
+            category: 'Book',
+            title: book.title,
+            description: book.link,
+            isFavorite: false,
+          }))
+        );
+      } catch (err) {
+        toast.error('Failed to load mentor data');
+        console.error(err);
+      }
+    };
+
+    fetchMentorData();
+  }, []);
 
   // Filter insights based on active filters
   useEffect(() => {
@@ -225,9 +207,35 @@ export default function Mentor() {
     setCurrentTipIndex(prev => (prev - 1 + tipPrompts.length) % tipPrompts.length);
   }, [tipPrompts.length]);
 
-  const handleNewInsight = useCallback(() => {
-    // In a real app, this would trigger a modal or navigate to create new insight
-    console.log('Creating new insight...');
+  const handleNewInsight = useCallback(async () => {
+    try {
+      await api.post('/mentor/insights/');
+      toast.success('Generating fresh insights. Please wait a moment...');
+
+      // Brief delay then refetch
+      setTimeout(async () => {
+        try {
+          const res = await api.get('/mentor/profile/');
+          const backendInsights = res.data?.insights ?? [];
+          const mapped: Insight[] = backendInsights.map((insight: any) => ({
+            id: insight.id,
+            category: insight.type,
+            tone: 'neutral',
+            title: insight.type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            description: insight.text,
+            isFavorite: false,
+            isNew: true,
+            isDismissed: false,
+          }));
+          setInsights(mapped);
+        } catch (err) {
+          console.error(err);
+        }
+      }, 3000);
+    } catch (err) {
+      toast.error('Failed to start insight generation');
+      console.error(err);
+    }
   }, []);
 
   // Click outside handler for filter dropdown

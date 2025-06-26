@@ -21,6 +21,8 @@ import {
   faEllipsisH,
   faTrophy
 } from '@fortawesome/free-solid-svg-icons';
+import api from '../services/api';
+import { toast } from 'react-toastify';
 
 // Types (shared with battles.tsx - these should be moved to a shared types file)
 interface ThoughtPod {
@@ -48,6 +50,10 @@ interface Battle {
   aiVerdict?: {
     winner: string;
     verdict: string;
+    reasoning?: string[];
+    keyFactors?: string[];
+    confidence?: string;
+    voteSummary?: string;
   };
 }
 
@@ -181,46 +187,88 @@ export default function BattleView() {
   const [showAIVerdict, setShowAIVerdict] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load battle data on mount
+  // Load battle data from API
   useEffect(() => {
     const loadBattle = async () => {
+      if (!battleId) {
+        navigate('/battles');
+        return;
+      }
+
       setLoading(true);
       try {
-        // Load battles from localStorage or use sample data
-        let allBattles: Battle[] = sampleRecentBattles;
-        try {
-          const savedBattles = localStorage.getItem('thoughty_battles');
-          if (savedBattles) {
-            allBattles = JSON.parse(savedBattles);
-          }
-        } catch (error) {
-          console.error('Error loading battles from localStorage:', error);
-        }
+        // Fetch battle details
+        const battleRes = await api.get(`/battles/${battleId}/`);
+        const battleData = battleRes.data;
 
-        const battle = allBattles.find(b => b.id === battleId);
-        if (battle) {
-          setCurrentBattle(battle);
-          setUserHasVoted(battle.status === 'completed');
-          setShowResults(battle.status === 'completed');
-          setShowAIVerdict(battle.status === 'completed' && !!battle.aiVerdict);
-        } else {
-          // Battle not found, redirect to battles page
-          navigate('/battles');
-        }
+        // Fetch the actual pod data since battle only contains IDs
+        const [podARes, podBRes, resultsRes] = await Promise.all([
+          api.get(`/pods/${battleData.pod_a}/`),
+          api.get(`/pods/${battleData.pod_b}/`),
+          api.get(`/battles/${battleId}/results/`)
+        ]);
+
+        const podA = podARes.data;
+        const podB = podBRes.data;
+        const voteCounts = resultsRes.data;
+
+        // Transform to UI format
+        const battle: Battle = {
+          id: battleData.id.toString(),
+          podA: {
+            id: podA.id.toString(),
+            name: podA.title,
+            description: podA.content.slice(0, 150) + (podA.content.length > 150 ? '...' : ''),
+            icon: 'lightbulb',
+            tags: (podA.tags || []).map((tag: any) => typeof tag === 'string' ? tag : tag.name),
+            author: podA.user?.username || 'Unknown',
+            createdAt: formatDate(podA.created_at),
+            battleCount: 0
+          },
+          podB: {
+            id: podB.id.toString(),
+            name: podB.title,
+            description: podB.content.slice(0, 150) + (podB.content.length > 150 ? '...' : ''),
+            icon: 'lightbulb',
+            tags: (podB.tags || []).map((tag: any) => typeof tag === 'string' ? tag : tag.name),
+            author: podB.user?.username || 'Unknown',
+            createdAt: formatDate(podB.created_at),
+            battleCount: 0
+          },
+          votesA: voteCounts[battleData.pod_a] || 0,
+          votesB: voteCounts[battleData.pod_b] || 0,
+          startedAt: formatDate(battleData.created_at),
+          status: battleData.winner ? 'completed' : 'active'
+        };
+
+        setCurrentBattle(battle);
+        setShowResults(battle.votesA + battle.votesB > 0);
+        
       } catch (error) {
         console.error('Error loading battle:', error);
+        toast.error('Failed to load battle');
         navigate('/battles');
       } finally {
         setLoading(false);
       }
     };
 
-    if (battleId) {
-      loadBattle();
-    } else {
-      navigate('/battles');
-    }
+    loadBattle();
   }, [battleId, navigate]);
+
+  // Helper function to format dates
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'Unknown';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    
+    if (diffHours < 1) return 'just now';
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  };
 
   // Helper function to update battle in localStorage
   const updateBattleInStorage = useCallback((updatedBattle: Battle) => {
@@ -242,73 +290,74 @@ export default function BattleView() {
     }
   }, []);
 
-  // Voting functions
-  const vote = useCallback((side: 'A' | 'B') => {
+  // Voting function
+  const vote = useCallback(async (side: 'A' | 'B') => {
     if (!currentBattle || userHasVoted) return;
 
-    const updatedBattle = {
-      ...currentBattle,
-      votesA: side === 'A' ? currentBattle.votesA + 1 : currentBattle.votesA,
-      votesB: side === 'B' ? currentBattle.votesB + 1 : currentBattle.votesB
-    };
+    try {
+      const choiceId = side === 'A' ? currentBattle.podA.id : currentBattle.podB.id;
+      
+      await api.post('/vote/', {
+        battle: parseInt(battleId!),
+        choice: parseInt(choiceId)
+      });
 
-    setCurrentBattle(updatedBattle);
-    setUserHasVoted(true);
-    setShowResults(true);
-    
-    // Update battle in localStorage
-    updateBattleInStorage(updatedBattle);
+      // Update UI state
+      const updatedBattle = {
+        ...currentBattle,
+        votesA: side === 'A' ? currentBattle.votesA + 1 : currentBattle.votesA,
+        votesB: side === 'B' ? currentBattle.votesB + 1 : currentBattle.votesB
+      };
 
-    // Here you would make an API call to save the vote
-    console.log('Vote cast for side:', side);
-  }, [currentBattle, userHasVoted, updateBattleInStorage]);
+      setCurrentBattle(updatedBattle);
+      setUserHasVoted(true);
+      setShowResults(true);
+      
+      toast.success('Vote cast successfully!');
+    } catch (error) {
+      console.error('Failed to vote:', error);
+      toast.error('Failed to cast vote');
+    }
+  }, [currentBattle, userHasVoted, battleId]);
 
-  const letAIDecide = useCallback(() => {
+  const letAIDecide = useCallback(async () => {
     if (!currentBattle || userHasVoted) return;
 
-    // AI logic
-    const totalVotes = currentBattle.votesA + currentBattle.votesB;
-    const randomFactor = Math.random();
-    let aiChoice: 'A' | 'B';
+    try {
+      const verdictRes = await api.get(`/battles/${battleId}/ai-verdict/`);
+      const verdictData = verdictRes.data;
 
-    if (totalVotes > 0) {
-      const percentageA = currentBattle.votesA / totalVotes;
-      aiChoice = randomFactor < percentageA + 0.1 ? 'A' : 'B';
-    } else {
-      aiChoice = randomFactor < 0.55 ? 'A' : 'B';
+      // Handle AI verdict - even if it's a tie
+      const winnerIsA = verdictData.winner_pod && verdictData.winner_pod.toString() === currentBattle.podA.id;
+      const winnerIsB = verdictData.winner_pod && verdictData.winner_pod.toString() === currentBattle.podB.id;
+      const isTie = !verdictData.winner_pod || verdictData.winner_title === 'Tie';
+      
+      const updatedBattle: Battle = {
+        ...currentBattle,
+        votesA: winnerIsA ? currentBattle.votesA + 3 : (isTie ? currentBattle.votesA + 1 : currentBattle.votesA),
+        votesB: winnerIsB ? currentBattle.votesB + 3 : (isTie ? currentBattle.votesB + 1 : currentBattle.votesB),
+        status: 'completed',
+        aiVerdict: {
+          winner: verdictData.winner_title || 'Tie',
+          verdict: verdictData.analysis || 'AI analysis completed.',
+          reasoning: verdictData.reasoning || [],
+          keyFactors: verdictData.key_factors || [],
+          confidence: verdictData.ai_confidence || 'medium',
+          voteSummary: verdictData.vote_summary || ''
+        }
+      };
+
+      setCurrentBattle(updatedBattle);
+      setUserHasVoted(true);
+      setShowResults(true);
+      setShowAIVerdict(true);
+
+      toast.success('AI verdict generated!');
+    } catch (error) {
+      console.error('Failed to get AI verdict:', error);
+      toast.error('Failed to get AI verdict');
     }
-
-    const updatedBattle: Battle = {
-      ...currentBattle,
-      votesA: aiChoice === 'A' ? currentBattle.votesA + 3 : currentBattle.votesA,
-      votesB: aiChoice === 'B' ? currentBattle.votesB + 3 : currentBattle.votesB,
-      status: 'completed'
-    };
-
-    // Generate AI verdict
-    const winner = aiChoice === 'A' ? currentBattle.podA.name : currentBattle.podB.name;
-    const loser = aiChoice === 'A' ? currentBattle.podB.name : currentBattle.podA.name;
-    
-    let verdict: string;
-    if (aiChoice === 'A') {
-      verdict = `"While ${loser.toLowerCase()} offers valuable perspectives, ${winner.toLowerCase()} demonstrates superior adaptability and innovation potential. The dynamic nature of this approach aligns better with emerging trends and future-oriented thinking that will drive progress in our rapidly evolving world."`;
-    } else {
-      verdict = `"While ${loser.toLowerCase()} presents interesting ideas, ${winner.toLowerCase()} provides more sustainable and practical solutions. The foundational stability and proven track record of this approach offers greater long-term value and societal benefit."`;
-    }
-
-    updatedBattle.aiVerdict = { winner, verdict };
-
-    setCurrentBattle(updatedBattle);
-    setUserHasVoted(true);
-    setShowResults(true);
-    setShowAIVerdict(true);
-
-    // Update battle in localStorage
-    updateBattleInStorage(updatedBattle);
-
-    // Here you would make an API call to save the AI decision
-    console.log('AI decided for side:', aiChoice);
-  }, [currentBattle, userHasVoted, updateBattleInStorage]);
+  }, [currentBattle, userHasVoted, battleId]);
 
   // Helper functions
   const getIconComponent = (iconName: string) => {
@@ -530,23 +579,79 @@ export default function BattleView() {
 
                 {/* AI Verdict */}
                 {showAIVerdict && currentBattle.aiVerdict && (
-                  <div className="mt-8 rounded-xl p-6">
+                  <div className="mt-8 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-200">
                     <div className="flex items-center mb-4">
                       <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
                         <FontAwesomeIcon icon={faRobot} />
                       </div>
-                      <h3 className="font-bold">AI Judge Verdict</h3>
+                      <div>
+                        <h3 className="font-bold text-lg">AI Judge Verdict</h3>
+                        {currentBattle.aiVerdict.confidence && (
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            currentBattle.aiVerdict.confidence === 'high' ? 'bg-green-100 text-green-700' :
+                            currentBattle.aiVerdict.confidence === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {currentBattle.aiVerdict.confidence} confidence
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="rounded-lg p-4 shadow-sm">
-                      <p className="mb-3">After analyzing both ThoughtPods, I declare the winner to be:</p>
+
+                    {/* Winner Announcement */}
+                    <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
+                      <p className="mb-3 text-gray-700">After analyzing both ThoughtPods, the verdict is:</p>
                       <div className="flex items-center justify-center mb-3">
-                        <div className="px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-bold flex items-center">
-                          <FontAwesomeIcon icon={faTrophy} className="mr-2" />
+                        <div className={`px-4 py-2 rounded-full text-white font-bold flex items-center ${
+                          currentBattle.aiVerdict.winner === 'Tie' 
+                            ? 'bg-gradient-to-r from-gray-500 to-gray-600' 
+                            : 'bg-gradient-to-r from-indigo-500 to-pink-500'
+                        }`}>
+                          <FontAwesomeIcon icon={currentBattle.aiVerdict.winner === 'Tie' ? faRobot : faTrophy} className="mr-2" />
                           <span>{currentBattle.aiVerdict.winner}</span>
                         </div>
                       </div>
-                      <p className="text-sm">{currentBattle.aiVerdict.verdict}</p>
+                      {currentBattle.aiVerdict.voteSummary && (
+                        <p className="text-sm text-gray-500 text-center">{currentBattle.aiVerdict.voteSummary}</p>
+                      )}
                     </div>
+
+                    {/* Analysis */}
+                    <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
+                      <h4 className="font-semibold mb-2 text-gray-800">Analysis</h4>
+                      <p className="text-sm text-gray-700">{currentBattle.aiVerdict.verdict}</p>
+                    </div>
+
+                    {/* Key Factors */}
+                    {currentBattle.aiVerdict.keyFactors && currentBattle.aiVerdict.keyFactors.length > 0 && (
+                      <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
+                        <h4 className="font-semibold mb-2 text-gray-800">Key Evaluation Factors</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {currentBattle.aiVerdict.keyFactors.map((factor, index) => (
+                            <span key={index} className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full">
+                              {factor}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Detailed Reasoning */}
+                    {currentBattle.aiVerdict.reasoning && currentBattle.aiVerdict.reasoning.length > 0 && (
+                      <div className="bg-white rounded-lg p-4 shadow-sm">
+                        <h4 className="font-semibold mb-3 text-gray-800">Detailed Reasoning</h4>
+                        <div className="space-y-2">
+                          {currentBattle.aiVerdict.reasoning.map((reason, index) => (
+                            <div key={index} className="flex items-start">
+                              <div className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">
+                                {index + 1}
+                              </div>
+                              <p className="text-sm text-gray-700">{reason}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

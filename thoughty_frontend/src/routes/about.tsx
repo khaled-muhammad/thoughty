@@ -15,8 +15,74 @@ import {
   faClock,
 } from '@fortawesome/free-solid-svg-icons';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { formsService, type ContactFormData } from '../services/forms';
+import { toast } from 'react-toastify';
 
 export default function About() {
+  const [contactForm, setContactForm] = useState<ContactFormData>({
+    name: '',
+    email: '',
+    phone: '',
+    subject: 'support',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleContactInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { id, value } = e.target;
+    setContactForm(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const response = await formsService.submitContactForm(contactForm);
+      toast.success(response.message);
+      setShowSuccess(true);
+      
+      // Reset form
+      setContactForm({
+        name: '',
+        email: '',
+        phone: '',
+        subject: 'support',
+        message: ''
+      });
+      
+      // Hide success message after 5 seconds
+      setTimeout(() => setShowSuccess(false), 5000);
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to send message. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setShowSuccess(false);
+    setContactForm({
+      name: '',
+      email: '',
+      phone: '',
+      subject: 'support',
+      message: ''
+    });
+  };
+
   return (
     <div id="about" className="page pt-[5rem]">
       {/* hero section */}
@@ -165,11 +231,17 @@ export default function About() {
                     id="randomEmoji">😊</span> Fill out the form below
                 </p>
 
-                <form id="contactForm" className="space-y-6">
+                <form id="contactForm" className="space-y-6" onSubmit={handleContactSubmit}>
                   <div className="relative group">
-                    <input type="text" id="name"
+                    <input 
+                      type="text" 
+                      id="name"
+                      value={contactForm.name}
+                      onChange={handleContactInputChange}
                       className="input-field w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-br)] rounded-lg text-white placeholder-transparent focus:input-focus transition-all duration-300 group-hover:border-[var(--primary-light)]"
-                      placeholder="John Doe" required />
+                      placeholder="John Doe" 
+                      required 
+                    />
                     <label htmlFor="name"
                       className="floating-label absolute left-4 top-3 text-gray-400 pointer-events-none group-hover:text-[var(--primary-light)] transition-colors duration-300">
                       Full Name <span className="text-[var(--accent)]">*</span>
@@ -181,9 +253,15 @@ export default function About() {
                   </div>
 
                   <div className="relative group">
-                    <input type="email" id="email"
+                    <input 
+                      type="email" 
+                      id="email"
+                      value={contactForm.email}
+                      onChange={handleContactInputChange}
                       className="input-field w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-br)] rounded-lg text-white placeholder-transparent focus:input-focus transition-all duration-300 group-hover:border-[var(--primary-light)]"
-                      placeholder="john@example.com" required />
+                      placeholder="john@example.com" 
+                      required 
+                    />
                     <label htmlFor="email"
                       className="floating-label absolute left-4 top-3 text-gray-400 pointer-events-none group-hover:text-[var(--primary-light)] transition-colors duration-300">
                       Email Address <span className="text-[var(--accent)]">*</span>
@@ -195,9 +273,14 @@ export default function About() {
                   </div>
 
                   <div className="relative group">
-                    <input type="tel" id="phone"
+                    <input 
+                      type="tel" 
+                      id="phone"
+                      value={contactForm.phone}
+                      onChange={handleContactInputChange}
                       className="input-field w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-br)] rounded-lg text-white placeholder-transparent focus:input-focus transition-all duration-300 group-hover:border-[var(--primary-light)]"
-                      placeholder="+1 (555) 123-4567" />
+                      placeholder="+1 (555) 123-4567" 
+                    />
                     <label htmlFor="phone"
                       className="floating-label absolute left-4 top-3 text-gray-400 pointer-events-none group-hover:text-[var(--primary-light)] transition-colors duration-300">
                       Phone Number (optional)
@@ -209,9 +292,13 @@ export default function About() {
                   </div>
 
                   <div className="relative group">
-                    <select id="subject"
-                      className="input-field w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-br)] rounded-lg text-white appearance-none focus:input-focus transition-all duration-300 group-hover:border-[var(--primary-light)] cursor-pointer">
-                      <option value="" disabled selected></option>
+                    <select 
+                      id="subject"
+                      value={contactForm.subject}
+                      onChange={handleContactInputChange}
+                      className="input-field w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-br)] rounded-lg text-white appearance-none focus:input-focus transition-all duration-300 group-hover:border-[var(--primary-light)] cursor-pointer"
+                      required
+                    >
                       <option value="support">Support</option>
                       <option value="sales">Sales</option>
                       <option value="feedback">Feedback</option>
@@ -228,9 +315,15 @@ export default function About() {
                   </div>
 
                   <div className="relative group">
-                    <textarea id="message" rows={4}
+                    <textarea 
+                      id="message" 
+                      rows={4}
+                      value={contactForm.message}
+                      onChange={handleContactInputChange}
                       className="input-field w-full px-4 py-3 bg-[var(--input-bg)] border border-[var(--input-br)] rounded-lg text-white placeholder-transparent focus:input-focus transition-all duration-300 group-hover:border-[var(--primary-light)]"
-                      placeholder="Your message here..." required></textarea>
+                      placeholder="Your message here..." 
+                      required
+                    ></textarea>
                     <label htmlFor="message"
                       className="floating-label absolute left-4 top-3 text-gray-400 pointer-events-none group-hover:text-[var(--primary-light)] transition-colors duration-300">
                       Your Message <span className="text-[var(--accent)]">*</span>
@@ -252,11 +345,20 @@ export default function About() {
                   </div>
 
                   <div className="relative">
-                    <button type="submit"
-                      className="btn-primary w-full py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center space-x-2 ripple relative overflow-hidden transition-all duration-300"
-                      id="submitBtn">
-                      <span id="submitText">Send Message</span>
-                      <FontAwesomeIcon icon={faPaperPlane} className="animate-pulse-slow" id="submitIcon" />
+                    <button 
+                      type="submit"
+                      disabled={isSubmitting}
+                      className={`btn-primary w-full py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center space-x-2 ripple relative overflow-hidden transition-all duration-300 ${isSubmitting ? 'opacity-75 cursor-not-allowed' : ''}`}
+                      id="submitBtn"
+                    >
+                      <span id="submitText">
+                        {isSubmitting ? 'Sending...' : 'Send Message'}
+                      </span>
+                      <FontAwesomeIcon 
+                        icon={faPaperPlane} 
+                        className={isSubmitting ? 'animate-spin' : 'animate-pulse-slow'} 
+                        id="submitIcon" 
+                      />
                       <div className="progress-bar"></div>
                     </button>
                     <div id="submitStatus"
@@ -274,26 +376,29 @@ export default function About() {
             </div>
           </div>
 
-          <div id="successMessage"
-            className="hidden mt-6 backdrop-blur-sm bg-[var(--card-bg)] rounded-xl p-6 border border-[var(--secondary)] bounce-in">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <div
-                  className="w-10 h-10 rounded-full bg-[var(--secondary)] bg-opacity-20 flex items-center justify-center">
-                  <i className="fas fa-check text-[var(--secondary)]"></i>
+          {showSuccess && (
+            <div id="successMessage"
+              className="mt-6 backdrop-blur-sm bg-[var(--card-bg)] rounded-xl p-6 border border-[var(--secondary)] bounce-in">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <div
+                    className="w-10 h-10 rounded-full bg-[var(--secondary)] bg-opacity-20 flex items-center justify-center">
+                    <i className="fas fa-check text-[var(--secondary)]"></i>
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-lg font-medium text-[var(--light)]">Message sent successfully!</h3>
+                  <p className="mt-1 text-sm text-gray-300">Thank you for contacting us. We'll get back to you soon.</p>
+                  <button 
+                    onClick={resetForm}
+                    className="mt-3 text-sm text-[var(--primary-light)] hover:underline flex items-center group">
+                    <span>Send another message</span>
+                    <i className="fas fa-redo ml-1 group-hover:rotate-180 transition-transform duration-300"></i>
+                  </button>
                 </div>
               </div>
-              <div className="ml-3">
-                <h3 className="text-lg font-medium text-[var(--light)]">Message sent successfully!</h3>
-                <p className="mt-1 text-sm text-gray-300">Thank you for contacting us. We'll get back to you soon.</p>
-                <button id="resetForm"
-                  className="mt-3 text-sm text-[var(--primary-light)] hover:underline flex items-center group">
-                  <span>Send another message</span>
-                  <i className="fas fa-redo ml-1 group-hover:rotate-180 transition-transform duration-300"></i>
-                </button>
-              </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
     </div>

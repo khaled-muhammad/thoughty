@@ -14,15 +14,47 @@ import {
   faBolt,
   faUsers,
   faBook,
-  faHeadset,
   faShield,
   faGavel,
   faCookie
 } from '@fortawesome/free-solid-svg-icons';
 import logoImage from '../assets/logo.png';
+import { useState } from 'react';
+import { formsService } from '../services/forms';
+import { toast } from 'react-toastify';
 
 export default function Footer() {
-    return (
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newsletterEmail.trim()) {
+      toast.error('Please enter your email address');
+      return;
+    }
+    
+    if (isSubscribing) return;
+    
+    setIsSubscribing(true);
+    
+    try {
+      const response = await formsService.subscribeToNewsletter(newsletterEmail.trim());
+      toast.success(response.message);
+      setNewsletterEmail('');
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to subscribe. Please try again.');
+      }
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
+  return (
     <footer className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
@@ -64,17 +96,27 @@ export default function Footer() {
                 <FontAwesomeIcon icon={faEnvelope} className="mr-2 text-indigo-400" />
                 Stay Updated
               </h4>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3">
                 <input 
                   type="email" 
                   placeholder="Enter your email"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
                   className="flex-1 px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  required
                 />
-                <button className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
-                  Subscribe
-                  <FontAwesomeIcon icon={faArrowRight} className="ml-2 text-sm" />
+                <button 
+                  type="submit"
+                  disabled={isSubscribing}
+                  className={`px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center justify-center ${isSubscribing ? 'opacity-75 cursor-not-allowed' : ''}`}
+                >
+                  {isSubscribing ? 'Subscribing...' : 'Subscribe'}
+                  <FontAwesomeIcon 
+                    icon={faArrowRight} 
+                    className={`ml-2 text-sm ${isSubscribing ? 'animate-spin' : ''}`} 
+                  />
                 </button>
-              </div>
+              </form>
             </div>
             
             {/* Social Links */}
@@ -94,6 +136,8 @@ export default function Footer() {
                   <a 
                     key={index}
                     href={social.href} 
+                    target="_blank"
+                    rel="noopener noreferrer"
                     aria-label={social.label}
                     className={`w-12 h-12 bg-gray-800/50 rounded-xl flex items-center justify-center text-gray-400 ${social.color} transition-all duration-300 transform hover:scale-110 hover:bg-gray-700/50 border border-gray-700 hover:border-gray-600`}
                   >
@@ -112,11 +156,10 @@ export default function Footer() {
             </h4>
             <ul className="space-y-3">
               {[
-                { name: "Features", href: "#" },
-                { name: "Pricing", href: "#" },
-                { name: "Roadmap", href: "#" },
-                { name: "Beta Program", href: "#" },
-                { name: "API", href: "#" }
+                { name: "Features", href: "/#features" },
+                { name: "How It Works", href: "/#how-it-works" },
+                { name: "Pricing", href: "/#pricing" },
+                { name: "Testimonials", href: "/#testimonials" }
               ].map((item, index) => (
                 <li key={index}>
                   <a 
@@ -133,22 +176,19 @@ export default function Footer() {
             </ul>
           </div>
           
-          {/* Resources Section */}
+          {/* Company Section */}
           <div>
             <h4 className="text-xl font-semibold mb-6 text-white flex items-center">
               <FontAwesomeIcon icon={faBook} className="mr-2 text-purple-400" />
-              Resources
+              Company
             </h4>
             <ul className="space-y-3">
               {[
-                { name: "About Us", href: "/about", icon: faUsers },
-                { name: "Blog", href: "#", icon: faBook },
-                { name: "Guides", href: "#", icon: faBook },
-                { name: "Community", href: "#", icon: faUsers },
-                { name: "Help Center", href: "#", icon: faHeadset }
+                { name: "About Us", href: "/about" },
+                { name: "Join Waitlist", href: "/#cta" }
               ].map((item, index) => (
                 <li key={index}>
-                  {item.href.startsWith('/') ? (
+                  {item.href.startsWith('/') && !item.href.startsWith('/#') ? (
                     <Link 
                       to={item.href} 
                       className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group"
