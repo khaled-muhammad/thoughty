@@ -26,4 +26,7 @@ urlpatterns = [
     path('api/', include('pods.urls')),
     path('api/', include('battles.urls')),
     path('api/brainstorm/', include('brainstorm.urls')),
+    path('api/mentor/', include('mentor.urls')),
+    path('api/gamification/', include('gamification.urls')),
+    path('api/forms/', include('forms.urls')),
 ] 

@@ -1,10 +1,11 @@
-from celery import shared_task
+# Celery has been removed for local development – tasks run synchronously.
+# If you re-enable Celery later, just add the decorator back.
+
 from .models import Insight, ThinkingProfile
 from pods.models import Pod
 from django.contrib.auth import get_user_model
 import random
 
-@shared_task
 def analyze_pod_for_insights(pod_id):
     try:
         pod = Pod.objects.get(id=pod_id)
@@ -16,7 +17,6 @@ def analyze_pod_for_insights(pod_id):
     except Pod.DoesNotExist:
         pass
 
-@shared_task
 def generate_insights_for_user(user_id):
     User = get_user_model()
     try:

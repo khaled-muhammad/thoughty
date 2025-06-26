@@ -5,7 +5,7 @@ from pods.serializers import TagSerializer
 class InsightSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Insight
-        fields = 'all'
+        fields = '__all__'
 
 class ThinkingProfileSerializer(serializers.ModelSerializer):
     dominant_tags = TagSerializer(many=True)

@@ -19,9 +19,11 @@ class MentorProfileView(APIView):
 
 class GenerateInsightsView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request):
-        generate_insights_for_user.delay(request.user.id)
-        return Response({'message': 'Insights generation started'})
+        # Run insight generation synchronously (Celery disabled)
+        generate_insights_for_user(request.user.id)
+        return Response({'message': 'Insights generated'})
 
 class SuggestionView(APIView):
     permission_classes = [IsAuthenticated]

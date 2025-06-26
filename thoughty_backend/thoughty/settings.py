@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     'mentor',
     'gamification',
     'notifications',
+    'forms',
 ]
 
 MIDDLEWARE = [
