@@ -355,10 +355,10 @@ export default function NavBar() {
                       <NavLink to="/gamify" className="dropdown-item">
                         <FontAwesomeIcon icon={faGamepad} /> <span>Gamify</span>
                       </NavLink>
-                      <NavLink to="/settings" className="dropdown-item">
+                      {/* <NavLink to="/settings" className="dropdown-item">
                         <FontAwesomeIcon icon={faCog} />
                         <span>Settings</span>
-                      </NavLink>
+                      </NavLink> */}
                       <button onClick={handleLogout} className="dropdown-item w-full text-left">
                         <FontAwesomeIcon icon={faSignOutAlt} />
                         <span>Log Out</span>
@@ -465,13 +465,13 @@ export default function NavBar() {
             >
               <FontAwesomeIcon icon={faGamepad} className="mr-2" /> Gamify
             </NavLink>
-            <NavLink
+            {/* <NavLink
               to="/settings"
               className="dropdown-item block w-full"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <FontAwesomeIcon icon={faCog} className="mr-2" /> Settings
-            </NavLink>
+            </NavLink> */}
             <button
               onClick={() => {
                 handleLogout();

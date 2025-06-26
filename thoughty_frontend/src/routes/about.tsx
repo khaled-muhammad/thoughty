@@ -150,21 +150,20 @@ export default function About() {
               <div
                 className="w-full h-64 bg-gradient-to-br from-[var(--secondary)] to-[var(--primary)] rounded-lg mb-4 overflow-hidden">
                 <img
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5cd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=988&q=80"
+                  src="https://ca.slack-edge.com/T0266FRGM-U08QQG1LHGB-0e54f004e75a-512"
                   className="w-full h-full object-cover" />
               </div>
               <h3 className="text-xl font-bold">Malak Sabry</h3>
-              <p className="text-[var(--secondary)] mb-3">CTO</p>
-              <p className="text-sm opacity-90 mb-4">Tech wizard specializing in AI, blockchain, and scalable architectures.
-              </p>
+              <p className="text-[var(--secondary)] mb-3">Founder</p>
+              <p className="text-sm opacity-90 mb-4">I am front-end dev! and a creative thinker who helped bringing that Ui to u!</p>
               <div className="flex space-x-3">
-                <a href="#" className="text-[var(--light)] hover:text-[var(--secondary)]">
+                <a href="https://www.linkedin.com/in/malak-sabry-muhammad440221/" className="text-[var(--light)] hover:text-[var(--secondary)]">
                   <FontAwesomeIcon icon={faLinkedin} />
                 </a>
-                <a href="#" className="text-[var(--light)] hover:text-[var(--secondary)]">
+                <a href="https://github.com/Malak-Sabry-104" className="text-[var(--light)] hover:text-[var(--secondary)]">
                   <FontAwesomeIcon icon={faGithub} />
                 </a>
-                <a href="#" className="text-[var(--light)] hover:text-[var(--secondary)]">
+                <a href="mailto:malaksabry1020@gmail.com" className="text-[var(--light)] hover:text-[var(--secondary)]">
                   <FontAwesomeIcon icon={faEnvelope} />
                 </a>
               </div>
@@ -175,21 +174,21 @@ export default function About() {
               <div
                 className="w-full h-64 bg-gradient-to-br from-[var(--secondary)] to-[var(--primary)] rounded-lg mb-4 overflow-hidden">
                 <img
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5cd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=988&q=80"
+                  src="https://ca.slack-edge.com/T0266FRGM-U08QKDF6F9B-edcd82c42589-512"
                   className="w-full h-full object-cover" />
               </div>
               <h3 className="text-xl font-bold">Khaled Muhammad</h3>
-              <p className="text-[var(--secondary)] mb-3">CTO</p>
-              <p className="text-sm opacity-90 mb-4">Tech wizard specializing in AI, blockchain, and scalable architectures.
+              <p className="text-[var(--secondary)] mb-3">Founder</p>
+              <p className="text-sm opacity-90 mb-4">I am A full-stack several years of Exprience, and I made the backend for Thoughty.
               </p>
               <div className="flex space-x-3">
                 <a href="#" className="text-[var(--light)] hover:text-[var(--secondary)]">
                   <FontAwesomeIcon icon={faLinkedin} />
                 </a>
-                <a href="#" className="text-[var(--light)] hover:text-[var(--secondary)]">
+                <a href="https://github.com/khaled-muhammad" className="text-[var(--light)] hover:text-[var(--secondary)]">
                   <FontAwesomeIcon icon={faGithub} />
                 </a>
-                <a href="#" className="text-[var(--light)] hover:text-[var(--secondary)]">
+                <a href="mailto:khaledmuhmmed99@gmail.com" className="text-[var(--light)] hover:text-[var(--secondary)]">
                   <FontAwesomeIcon icon={faEnvelope} />
                 </a>
               </div>
