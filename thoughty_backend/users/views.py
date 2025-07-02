@@ -17,8 +17,17 @@ def create_guest_user(request):
         is_guest=True
     )
     refresh = RefreshToken.for_user(guest)
+    
+    # Serialize user data
+    user_serializer = UserSerializer(guest)
 
-    return Response({"detail": "Guest user created", "id": guest.id, "access": str(refresh.access_token), "refresh": str(refresh), "email": guest.email}, status=status.HTTP_201_CREATED)
+    return Response({
+        "user": user_serializer.data,
+        "tokens": {
+            "access": str(refresh.access_token),
+            "refresh": str(refresh)
+        }
+    }, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
 def custom_login(request):
