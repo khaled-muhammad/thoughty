@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useReducer, ReactNode } from 'react';
 import { toast } from 'react-toastify';
-import authService from '../services/auth';
+import { authService } from '../services/authService';
 import type {
     User,
     AuthContextType,
@@ -103,24 +103,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       dispatch({ type: 'AUTH_START' });
       
-      const response = await authService.login({
-        login: credentials.email, // Now uses the 'login' field that accepts email or username
+      const { user, tokens } = await authService.login({
+        email: credentials.email,
         password: credentials.password
       });
 
-      alert(response.data!.user.email);
-      alert('response.data!.access');
-      if (response.success && response.data) {
-        authService.setToken(response.data.access);  // Changed from token to access
-        authService.setRefreshToken(response.data.refresh);  // Changed from refreshToken to refresh
-        authService.setUser(response.data.user);
-        
-        dispatch({ type: 'AUTH_SUCCESS', payload: response.data.user as User });
-        toast.success(`Welcome back, ${response.data.user.username}!`);
-      } else {
-        dispatch({ type: 'AUTH_FAILURE' });
-        throw new Error(response.message || 'Login failed');
-      }
+      // Store the user data and tokens
+      authService.setUser(user);
+      
+      dispatch({ type: 'AUTH_SUCCESS', payload: user as User });
+      toast.success(`Welcome back, ${user.username}!`);
     } catch (error) {
       dispatch({ type: 'AUTH_FAILURE' });
       throw error;
@@ -132,24 +124,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       dispatch({ type: 'AUTH_START' });
       
-      const response = await authService.register({
+      const user = await authService.register({
         email: userData.email,
         username: userData.username,
         password: userData.password,
         re_password: userData.password,
       });
 
-      if (response.success) {
-        // Auto-login after successful registration
-        await login({
-          email: userData.email, // Use email for login after registration
-          password: userData.password,
-        });
-        toast.success(`Welcome to Thoughty, ${userData.username}!`);
-      } else {
-        dispatch({ type: 'AUTH_FAILURE' });
-        throw new Error(response.message || 'Registration failed');
-      }
+      // Auto-login after successful registration
+      await login({
+        email: userData.email,
+        password: userData.password,
+      });
+      
+      toast.success(`Welcome to Thoughty, ${userData.username}!`);
     } catch (error) {
       dispatch({ type: 'AUTH_FAILURE' });
       throw error;
@@ -160,19 +148,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const createGuestUser = async (): Promise<void> => {
     try {
       dispatch({ type: 'AUTH_START' });
-      // For now, just create a mock guest user
-      const guestUser = {
-        id: 0,
-        email: 'guest@thoughty.app',
-        username: 'Guest User',
-        is_guest: true,
-        tokens: 0,
-        badges: [],
-        date_joined: new Date().toISOString(),
-      };
       
-      authService.setUser(guestUser);
-      dispatch({ type: 'AUTH_SUCCESS', payload: guestUser as User });
+      // Use the actual auth service to create a real guest user
+      const { user, tokens } = await authService.createGuestUser();
+      
+      // Store the user data
+      authService.setUser(user);
+      dispatch({ type: 'AUTH_SUCCESS', payload: user as User });
       toast.success('Welcome! You\'re browsing as a guest.');
     } catch (error) {
       dispatch({ type: 'AUTH_FAILURE' });
@@ -190,12 +172,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Refresh token function
   const refreshToken = async (): Promise<string | null> => {
     try {
-      const response = await authService.refreshToken();
-      if (response.success && response.data) {
-        authService.setToken(response.data.access);  // Changed from token to access
-        return response.data.access;  // Changed from token to access
-      }
-      return null;
+      const newToken = await authService.refreshToken();
+      return newToken;
     } catch (error) {
       dispatch({ type: 'LOGOUT' });
       return null;

@@ -117,4 +117,20 @@ export const authService = {
       re_new_password: newPassword,
     });
   },
+
+  // User data management
+  setUser: (user: User): void => {
+    localStorage.setItem('user_data', JSON.stringify(user));
+  },
+
+  getUser: (): User | null => {
+    const userData = localStorage.getItem('user_data');
+    return userData ? JSON.parse(userData) : null;
+  },
+
+  // Complete session cleanup
+  clearSession: (): void => {
+    tokenManager.clearTokens();
+    localStorage.removeItem('user_data');
+  },
 }; 
