@@ -15,10 +15,6 @@ Built with:
 * **Brainstorm Roulette & Multiverse** allows the user to have a creative AI thinker to help them with their ideas or to help somebody creating the same idea in another verse ✨
 * **Mind Mentor** that tracks user thoughts and ideas and help them get improving using AI and suggest for them books to read and create reports for them.
 
-### 🔔 Notifications & Timeline
-
-* Real-time alerts for battles, reactions, evolution
-* Timeline view of thought progression
 
 ## 🚀 Getting Started
 
