@@ -93,7 +93,7 @@ export default function Auth() {
     if (!loginData.password) {
       newErrors.password = 'Password is required';
     } else if (loginData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters with uppercase, lowercase, number, and Special character like (*) or (#)';
+      newErrors.password = 'Password must be at least 8 characters';
     }
 
     setErrors(newErrors);
@@ -118,7 +118,7 @@ export default function Auth() {
     if (!registerData.password) {
       newErrors.password = 'Password is required';
     } else if (!validatePassword(registerData.password)) {
-      newErrors.password = 'Password must be at least 8 characters with uppercase, lowercase, number, and Special character like (*) or (#)';
+      newErrors.password = 'Password must be at least 8 characters with uppercase, lowercase, and number';
     }
 
     if (!registerData.confirmPassword) {
