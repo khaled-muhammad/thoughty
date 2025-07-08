@@ -9,17 +9,21 @@ import type {
 export const authService = {
   // Login user
   login: async (credentials: LoginCredentials): Promise<{ user: User; tokens: AuthTokens }> => {
-    const response = await api.post('/auth/jwt/create/', credentials);
-    const tokens: AuthTokens = response.data;
+    const response = await api.post('/auth/login/', {
+      username: credentials.email, // Backend accepts email in the username field
+      password: credentials.password
+    });
+    
+    const { data } = response.data;
+    const tokens: AuthTokens = {
+      access: data.access,
+      refresh: data.refresh
+    };
     
     // Store tokens
     tokenManager.setTokens(tokens.access, tokens.refresh);
     
-    // Get user data
-    const userResponse = await api.get('/auth/users/me/');
-    const user: User = userResponse.data;
-    
-    return { user, tokens };
+    return { user: data.user, tokens };
   },
 
   // Register user
@@ -41,11 +45,12 @@ export const authService = {
       throw new Error('No refresh token available');
     }
 
-    const response = await api.post('/auth/jwt/refresh/', {
+    const response = await api.post('/auth/refresh/', {
       refresh: refreshToken,
     });
 
-    const newAccessToken = response.data.access;
+    const { data } = response.data;
+    const newAccessToken = data.access;
     tokenManager.setTokens(newAccessToken, refreshToken);
     
     return newAccessToken;

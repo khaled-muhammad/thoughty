@@ -6,10 +6,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle, faFacebookF } from '@fortawesome/free-brands-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import "../styles/auth.css";
-import { authService } from '../services/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LoginFormData {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -28,6 +28,7 @@ interface FormErrors {
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { login, register } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -35,7 +36,7 @@ export default function Auth() {
 
   // Form data states
   const [loginData, setLoginData] = useState<LoginFormData>({
-    username: '',
+    email: '',
     password: ''
   });
 
@@ -84,10 +85,10 @@ export default function Auth() {
   const validateLoginForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!loginData.username.trim()) {
-      newErrors.username = 'Username is required';
-    } else if (loginData.username.length < 3) {
-      newErrors.username = 'Username must be 3-20 characters, alphanumeric and underscores only';
+    if (!loginData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!validateEmail(loginData.email)) {
+      newErrors.email = 'Please enter a valid email address';
     }
 
     if (!loginData.password) {
@@ -147,42 +148,17 @@ export default function Auth() {
     setIsLoading(true);
     
     try {
-      // Use actual API service
-      const response = await authService.login({
-        username: loginData.username,
+      await login({
+        email: loginData.email,
         password: loginData.password
       });
 
-      if (response.success && response.data) {
-        // Store auth data
-        authService.setToken(response.data.access);
-        if (response.data.refresh) {
-          authService.setRefreshToken(response.data.refresh);
-        }
-        authService.setUser(response.data.user);
-
-        toast.success(response.message || 'Login successful! Welcome back!');
-        
-        // Redirect to dashboard
-        setTimeout(() => {
-          window.location.replace('/dashboard');
-        }, 1000);
-      } else {
-        // Handle API errors
-        if (response.errors) {
-          // Convert API errors (string arrays) to form errors (strings)
-          const formErrors: FormErrors = {};
-          Object.entries(response.errors).forEach(([key, messages]) => {
-            formErrors[key] = Array.isArray(messages) ? messages[0] : messages;
-          });
-          setErrors(formErrors);
-        }
-        toast.error(response.message || 'Login failed. Please check your credentials.');
-      }
+      // Navigate to dashboard on success
+      navigate('/dashboard');
       
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('An unexpected error occurred. Please try again.');
+      toast.error('Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -199,45 +175,19 @@ export default function Auth() {
     setIsLoading(true);
     
     try {
-      // Use actual API service
-      const response = await authService.register({
+      await register({
         email: registerData.email,
         username: registerData.username,
         password: registerData.password,
-        re_password: registerData.password,
+        re_password: registerData.confirmPassword,
       });
 
-      if (response.success) {
-        toast.success(response.message || 'Account created successfully! Please check your email to verify your account.');
-        
-        // Switch to login form and clear register form
-        setTimeout(() => {
-          setIsSignUp(false);
-          setRegisterData({
-            email: '',
-            username: '',
-            password: '',
-            confirmPassword: '',
-            agreeToTerms: false
-          });
-          setErrors({});
-        }, 1000);
-      } else {
-        // Handle API errors
-        if (response.errors) {
-          // Convert API errors (string arrays) to form errors (strings)
-          const formErrors: FormErrors = {};
-          Object.entries(response.errors).forEach(([key, messages]) => {
-            formErrors[key] = Array.isArray(messages) ? messages[0] : messages;
-          });
-          setErrors(formErrors);
-        }
-        toast.error(response.message || 'Registration failed. Please try again.');
-      }
+      // Navigate to dashboard on success (AuthContext auto-logs in after registration)
+      navigate('/dashboard');
       
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error('An unexpected error occurred. Please try again.');
+      toast.error('Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -302,19 +252,19 @@ export default function Auth() {
 
                 <form onSubmit={handleLoginSubmit} className="modern-form">
                   <div className="input-field">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="email">Email</label>
                     <div className="input-wrapper">
               <input
-                type="text"
-                id="username"
-                        placeholder="Enter your username"
-                        className={`form-input ${errors.username ? 'error' : ''}`}
-                        value={loginData.username}
-                        onChange={(e) => setLoginData({...loginData, username: e.target.value})}
+                type="email"
+                id="email"
+                        placeholder="Enter your email"
+                        className={`form-input ${errors.email ? 'error' : ''}`}
+                        value={loginData.email}
+                        onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                         disabled={isLoading}
                       />
                     </div>
-                    {errors.username && <span className="field-error">{errors.username}</span>}
+                    {errors.email && <span className="field-error">{errors.email}</span>}
                   </div>
 
                   <div className="input-field">
@@ -341,9 +291,13 @@ export default function Auth() {
                   </div>
 
                   <div className="form-footer">
-                    <a href="#" className="forgot-link">
+                    <button 
+                      type="button"
+                      className="forgot-link"
+                      onClick={() => toast.info('Password reset feature coming soon!')}
+                    >
                       Forgot password?
-              </a>
+                    </button>
                   </div>
                   
                   <button 
@@ -454,9 +408,9 @@ export default function Auth() {
                       />
                       <span className="checkbox-custom"></span>
                       <span className="checkbox-text">
-                        I agree to the <a href="#" className="link">Terms of Service</a> and{' '}
-                        <a href="#" className="link">Privacy Policy</a>
-                  </span>
+                        I agree to the <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="link">Terms of Service</a> and{' '}
+                        <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="link">Privacy Policy</a>
+                      </span>
                 </label>
                     {errors.agreeToTerms && <span className="field-error">{errors.agreeToTerms}</span>}
                   </div>

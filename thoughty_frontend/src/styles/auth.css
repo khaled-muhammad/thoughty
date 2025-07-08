@@ -59,6 +59,7 @@
   padding-bottom: 15rem;
   position: relative;
   z-index: 1;
+  overflow: visible; /* Allow content to extend beyond container */
 }
 
 /* Floating Background Shapes */
@@ -270,6 +271,8 @@
   -webkit-transform-origin: top center;
   transform-origin: top center;
   min-height: 650px;
+  height: auto; /* Allow for dynamic height */
+  margin-bottom: 50px; /* Add space below for validation errors */
 }
 
 .form-flipper.flipped {
@@ -295,6 +298,9 @@
   z-index: 1;
   opacity: 0;
   visibility: hidden;
+  min-height: 650px; /* Ensure minimum height */
+  height: auto; /* Allow expansion */
+  overflow: visible; /* Allow content to expand beyond */
 }
 
 .form-flipper:not(.flipped) .front-side {
@@ -328,6 +334,7 @@
 .back-side {
   -webkit-transform: rotateY(180deg);
   transform: rotateY(180deg);
+  position: relative; /* Ensure the back side has a position context */
 }
 
 .form-side:hover {
@@ -448,6 +455,8 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  max-width: 100%; /* Ensure error message doesn't overflow */
+  word-wrap: break-word; /* Allow long words to break */
 }
 
 /* Form Footer */
@@ -463,6 +472,10 @@
   font-size: 0.875rem;
   font-weight: 500;
   transition: var(--auth-transition);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 .forgot-link:hover {
