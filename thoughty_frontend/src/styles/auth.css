@@ -37,7 +37,7 @@
 
 /* Global Styles */
 .auth-reimagined {
-  min-height: 100vh;
+  min-height: calc(100vh + 300px);
   background: linear-gradient(
     135deg,
     var(--auth-bg-primary) 0%,
@@ -56,6 +56,7 @@
   justify-content: center;
   padding: 2rem 1rem;
   padding-top: 5rem;
+  padding-bottom: 15rem;
   position: relative;
   z-index: 1;
 }
@@ -251,7 +252,10 @@
    =============================================== */
 
 .form-container {
+  -webkit-perspective: 1000px;
   perspective: 1000px;
+  -webkit-perspective-origin: top center;
+  perspective-origin: top center;
   width: 100%;
   max-width: 440px;
 }
@@ -259,18 +263,27 @@
 .form-flipper {
   position: relative;
   width: 100%;
+  -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
+  -webkit-transition: -webkit-transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-transform-origin: top center;
+  transform-origin: top center;
+  min-height: 650px;
 }
 
 .form-flipper.flipped {
+  -webkit-transform: rotateY(180deg);
   transform: rotateY(180deg);
 }
 
 .form-side {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   position: absolute;
   width: 100%;
-  backface-visibility: hidden;
+  top: 0;
+  left: 0;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
@@ -278,16 +291,42 @@
   padding: 2.5rem;
   box-shadow: var(--auth-shadow-xl);
   transition: var(--auth-transition);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  visibility: hidden;
 }
 
-.form-flipper:not(.flipped) .front-side,
-.form-flipper.flipped .back-side {
-  position: static;
-  opacity: 1;
+.form-flipper:not(.flipped) .front-side {
   pointer-events: auto;
+  z-index: 10;
+  opacity: 1;
+  visibility: visible;
+}
+
+.form-flipper.flipped .back-side {
+  pointer-events: auto;
+  z-index: 10;
+  opacity: 1;
+  visibility: visible;
+}
+
+.form-flipper:not(.flipped) .back-side {
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.form-flipper.flipped .front-side {
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  visibility: hidden;
 }
 
 .back-side {
+  -webkit-transform: rotateY(180deg);
   transform: rotateY(180deg);
 }
 
@@ -710,10 +749,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.form-side {
-  animation: slideInUp 0.6s ease-out;
 }
 
 .input-field {
